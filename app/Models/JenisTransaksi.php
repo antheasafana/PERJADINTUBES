@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class JenisTransaksi extends Model
 {
+    //coba coba
     use HasFactory; 
     protected $table = 'jenis_transaksi'; // Nama tabel eksplisit
 
