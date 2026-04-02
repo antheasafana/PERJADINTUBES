@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\AkunResource\Pages;
-use App\Filament\Resources\AkunResource\RelationManagers;
-use App\Models\Akun;
+use App\Filament\Resources\JenisTransaksiResource\Pages;
+use App\Filament\Resources\JenisTransaksiResource\RelationManagers;
+use App\Models\JenisTransaksi;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -12,7 +12,6 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-
 // tambahan untuk komponen input form
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\TextInput;
@@ -29,9 +28,9 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Forms\Components\Grid;
 
-class AkunResource extends Resource
+class JenisTransaksiResource extends Resource
 {
-    protected static ?string $model = Akun::class;
+    protected static ?string $model = JenisTransaksi::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -39,61 +38,56 @@ class AkunResource extends Resource
     {
         return $form
             ->schema([
-                TextInput::make('kode_akun')
-                ->label('Kode Akun')
-                ->required(),
-
-            TextInput::make('nama_akun')
-                ->label('Nama Akun')
-                ->required(),
-
-            Select::make('jenis_akun')
-                ->label('Jenis Akun')
+                //
+                Select::make('jenis_transaksi')
+                ->label('Jenis Transaksi')
                 ->options([
-                    'Aset' => 'Aset',
-                    'Kewajiban' => 'Kewajiban',
-                    'Modal' => 'Modal',
+                    'Reimbursement' => 'Reimbursement',
+                    'Pengembalian' => 'Pengembalian',
                 ])
                 ->required(),
 
-            FileUpload::make('dokumen')
-                ->label('Dokumen')
-                ->image()
-                ->directory('dokumen-akun'),
+                 Textarea::make('keterangan')
+                ->label('Keterangan Transaksi'),
 
-            DatePicker::make('tanggal_dibuat')
-                ->label('Tanggal Dibuat')
-                ->required(),  
+                FileUpload::make('bukti_transaksi')
+                    ->label('Upload Bukti Transaksi')
+                    ->directory('documents')
+                    ->maxSize(2048) // 2mb
+                    ->required(),
             ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
-            ->columns([
-               TextColumn::make('kode_akun')
-                ->label('Kode Akun')
-                ->searchable(),
-                
-                TextColumn::make('nama_akun')
-                ->label('Nama Akun')
-                ->searchable(),
-                
-                BadgeColumn::make('jenis_akun')
-                    ->label('Kategori')
-                    ->colors([
-                        'Aset' => 'gray',
-                        'Kewajiban' => 'yellow',
-                        'Modal' => 'red',
-                    ]),
+        ->columns([
+            TextColumn::make('id_jenis_transaksi')
+                ->label('ID')
+                ->sortable(),
 
-                TextColumn::make('tanggal_dibuat')->date(),
-                ImageColumn::make('dokumen')->label('Dokumen'), 
+            TextColumn::make('jenis_transaksi')
+                ->label('Jenis Transaksi')
+                ->searchable()
+                ->sortable(),
+
+            TextColumn::make('keterangan')
+                ->label('Keterangan Transaksi')
+                ->searchable(),
+
+            TextColumn::make('bukti_transaksi')
+                 ->label('Bukti Transaksi')
+                 ->formatStateUsing(fn ($state) => $state 
+                    ? '<a href="' . asset('storage/' . $state) . '" target="_blank">📄 Lihat</a>' : 'Tidak ada')
+                ->html(),
+
             ])
+
             ->filters([
                 //
             ])
             ->actions([
+                Tables\Actions\EditAction::make(),
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
@@ -115,9 +109,9 @@ class AkunResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListAkuns::route('/'),
-            'create' => Pages\CreateAkun::route('/create'),
-            'edit' => Pages\EditAkun::route('/{record}/edit'),
+            'index' => Pages\ListJenisTransaksis::route('/'),
+            'create' => Pages\CreateJenisTransaksi::route('/create'),
+            'edit' => Pages\EditJenisTransaksi::route('/{record}/edit'),
         ];
     }
 }
