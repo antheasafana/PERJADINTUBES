@@ -3,30 +3,21 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\JenisTransaksiResource\Pages;
-use App\Filament\Resources\JenisTransaksiResource\RelationManagers;
 use App\Models\JenisTransaksi;
+
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-// tambahan untuk komponen input form
-use Filament\Forms\Components\RichEditor;
-use Filament\Forms\Components\TextInput;
+
+// Form Components
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Toggle;
-use Filament\Forms\Components\Radio;
-// tambahan untuk komponen kolom
+
+// Table Columns
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\BadgeColumn;
-use Filament\Tables\Columns\ImageColumn;
-use Filament\Tables\Columns\IconColumn;
-use Filament\Forms\Components\Grid;
 
 class JenisTransaksiResource extends Resource
 {
@@ -34,63 +25,84 @@ class JenisTransaksiResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationLabel = 'Jenis Transaksi';
+
+    protected static ?string $pluralModelLabel = 'Jenis Transaksi';
+
+    protected static ?string $modelLabel = 'Jenis Transaksi';
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                //
-                Select::make('jenis_transaksi')
-                ->label('Jenis Transaksi')
-                ->options([
-                    'Reimbursement' => 'Reimbursement',
-                    'Pengembalian' => 'Pengembalian',
-                ])
-                ->required(),
 
-                 Textarea::make('keterangan')
-                ->label('Keterangan Transaksi'),
+                Select::make('jenis_transaksi')
+                    ->label('Jenis Transaksi')
+                    ->options([
+                        'Reimbursement' => 'Reimbursement',
+                        'Uang muka' => 'Uang muka',
+                    ])
+                    ->required(),
+
+                Textarea::make('keterangan')
+                    ->label('Keterangan Transaksi')
+                    ->rows(4),
 
                 FileUpload::make('bukti_transaksi')
                     ->label('Upload Bukti Transaksi')
                     ->directory('documents')
-                    ->maxSize(2048) // 2mb
+                    ->disk('public')
+                    ->maxSize(2048) // 2 MB
                     ->required(),
+
             ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
-        ->columns([
-            TextColumn::make('id_jenis_transaksi')
-                ->label('ID')
-                ->sortable(),
+            ->columns([
 
-            TextColumn::make('jenis_transaksi')
-                ->label('Jenis Transaksi')
-                ->searchable()
-                ->sortable(),
+                TextColumn::make('id')
+                    ->label('ID')
+                    ->sortable(),
 
-            TextColumn::make('keterangan')
-                ->label('Keterangan Transaksi')
-                ->searchable(),
+                TextColumn::make('jenis_transaksi')
+                    ->label('Jenis Transaksi')
+                    ->searchable()
+                    ->sortable(),
 
-            TextColumn::make('bukti_transaksi')
-                 ->label('Bukti Transaksi')
-                 ->formatStateUsing(fn ($state) => $state 
-                    ? '<a href="' . asset('storage/' . $state) . '" target="_blank">📄 Lihat</a>' : 'Tidak ada')
-                ->html(),
+                TextColumn::make('keterangan')
+                    ->label('Keterangan')
+                    ->limit(50)
+                    ->searchable(),
+
+                TextColumn::make('bukti_transaksi')
+                    ->label('Bukti Transaksi')
+                    ->formatStateUsing(fn ($state) =>
+                        $state
+                            ? '<a href="' . asset('storage/' . $state) . '" target="_blank">📄 Lihat File</a>'
+                            : 'Tidak ada'
+                    )
+                    ->html(),
+
+                TextColumn::make('created_at')
+                    ->label('Tanggal Dibuat')
+                    ->dateTime('d M Y H:i')
+                    ->sortable(),
 
             ])
 
             ->filters([
                 //
             ])
+
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
+
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),

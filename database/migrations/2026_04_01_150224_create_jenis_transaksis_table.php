@@ -12,9 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('jenis_transaksi', function (Blueprint $table) {
+
             $table->id();
-            $table->enum('jenis_transaksi', ['Reimbursement', 'Pengembalian']); // Jenis Transaksi
-            $table->string('keterangan'); // Keterangan Transaksi
+
+            // Jenis transaksi
+            $table->string('jenis_transaksi');
+            // Keterangan transaksi
+            $table->text('keterangan')->nullable();
+            // Upload bukti transaksi
             $table->string('bukti_transaksi')->nullable();
             $table->timestamps();
         });
