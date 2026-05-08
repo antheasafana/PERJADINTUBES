@@ -2,13 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
-class pegawai extends Model
+class Pegawai extends Authenticatable
 {
-    use HasFactory;
-    protected $table = 'pegawai'; // Nama tabel eksplisit
+    protected $table = 'pegawai';
+
+    protected $primaryKey = 'id_pegawai';
 
     protected $guarded = [];
+
+    protected $hidden = [
+        'password'
+    ];
 }
