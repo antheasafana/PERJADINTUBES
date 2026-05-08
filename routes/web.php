@@ -1,42 +1,10 @@
 <?php
 
-use App\Http\Controllers\AuthController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\PengajuanController;
 
-// =======================
-// LOGIN
-// =======================
+Route::get('/pengajuan', [PengajuanController::class, 'index'])->name('pengajuan.index');
 
-Route::get('/',
-    [AuthController::class,'showLoginForm']
-);
+Route::get('/pengajuan/create', [PengajuanController::class, 'create'])->name('pengajuan.create');
 
-Route::get('/login',
-    [AuthController::class,'showLoginForm']
-);
-
-Route::post('/login',
-    [AuthController::class,'login']
-);
-
-// =======================
-// LOGOUT
-// =======================
-
-Route::post('/logout',
-    [AuthController::class,'logout']
-);
-
-// =======================
-// DASHBOARD PEGAWAI
-// =======================
-
-Route::middleware('pegawai')
-->group(function(){
-
-    Route::get('/dashboard',function(){
-
-        return view('pegawai.dashboard');
-
-    });
-
-});
+Route::post('/pengajuan/store', [PengajuanController::class, 'store'])->name('pengajuan.store');
