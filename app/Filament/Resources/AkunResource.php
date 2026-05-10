@@ -32,7 +32,9 @@ use Filament\Forms\Components\Grid;
 class AkunResource extends Resource
 {
     protected static ?string $model = Akun::class;
+    protected static ?string $navigationGroup = 'Master Data';
 
+    protected static ?int $navigationSort = 5;      
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function form(Form $form): Form

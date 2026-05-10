@@ -18,6 +18,8 @@ class PengajuanResource extends Resource
 
     protected static ?string $navigationGroup = 'Transaksi';
 
+    protected static ?int $navigationSort = 10;
+
     protected static ?string $navigationLabel = 'Pengajuan';
 
     // ================= FORM =================

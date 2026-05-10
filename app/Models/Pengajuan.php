@@ -21,4 +21,18 @@ class Pengajuan extends Model
         'dokumen',
         'status'
     ];
+     public function pegawai()
+    {
+    return $this->belongsTo(Pegawai::class, 'id_pegawai');
+    }
+
+    public function jenisTransaksi()
+    {
+    return $this->belongsTo(JenisTransaksi::class, 'id_jenis_transaksi');
+    }
+
+    public function realisasiDana()
+    {
+    return $this->hasOne(RealisasiDana::class, 'id_pengajuan');
+    }
 }

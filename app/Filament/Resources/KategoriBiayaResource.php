@@ -17,6 +17,10 @@ use Filament\Tables\Columns\TextColumn;
 class KategoriBiayaResource extends Resource
 {
     protected static ?string $model = KategoriBiaya::class;
+    
+    protected static ?string $navigationGroup = 'Master Data';
+
+    protected static ?int $navigationSort = 4;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
