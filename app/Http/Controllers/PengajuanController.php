@@ -28,21 +28,35 @@ class PengajuanController extends Controller
 
     public function store(Request $request)
     {
-        // VALIDASI
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDASI
+        |--------------------------------------------------------------------------
+        */
+
         $request->validate([
             'jenis_pengajuan' => 'required',
             'tujuan' => 'required',
             'tgl_berangkat' => 'required|date',
             'tgl_kembali' => 'required|date',
             'estimasi_biaya' => 'required|numeric',
-
             'dokumen' => 'nullable|file|mimes:pdf,png,jpg,jpeg,doc,docx|max:2048'
         ]);
 
-        // DEFAULT FILE
+        /*
+        |--------------------------------------------------------------------------
+        | DEFAULT FILE
+        |--------------------------------------------------------------------------
+        */
+
         $fileName = null;
 
-        // upload file
+        /*
+        |--------------------------------------------------------------------------
+        | UPLOAD FILE
+        |--------------------------------------------------------------------------
+        */
+
         if ($request->hasFile('dokumen')) {
 
             $file = $request->file('dokumen');
@@ -52,8 +66,13 @@ class PengajuanController extends Controller
             $file->move(public_path('dokumen'), $fileName);
         }
 
-        // simpan pengajuan
-        Pengajuan::create([
+        /*
+        |--------------------------------------------------------------------------
+        | SIMPAN PENGAJUAN
+        |--------------------------------------------------------------------------
+        */
+
+        $pengajuan = Pengajuan::create([
 
             'id_pegawai' => 1,
 
@@ -69,15 +88,53 @@ class PengajuanController extends Controller
 
             'estimasi_biaya' => $request->estimasi_biaya,
 
-            // simpan sebagai JSON
-            'dokumen' => [
-                'file' => $fileName
-            ],
+            'dokumen' => $fileName,
 
             'status' => 'Diajukan'
         ]);
 
-        // REDIRECT
+        /*
+        |--------------------------------------------------------------------------
+        | FLOW PENGAJUAN
+        |--------------------------------------------------------------------------
+        */
+
+        // UANG MUKA -> MASUK VERIFIKASI
+        if ($request->jenis_pengajuan == 'UANG_MUKA') {
+
+            Verifikasi::create([
+
+                'id_pengajuan' => $pengajuan->id_pengajuan,
+
+                'admin_id' => 1,
+
+                'level' => 1,
+
+                'status' => 'pending',
+
+                'tanggal_verifikasi' => null,
+            ]);
+        }
+
+        // REIMBURSEMENT & PENGEMBALIAN
+        else {
+
+            RealisasiDana::create([
+
+                'id_pengajuan' => $pengajuan->id_pengajuan,
+
+                'tgl_realisasi' => now(),
+
+                'total_realisasi' => $request->estimasi_biaya,
+            ]);
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | REDIRECT
+        |--------------------------------------------------------------------------
+        */
+
         return redirect('/pengajuan')
             ->with('success', 'Pengajuan berhasil dikirim!');
     }
@@ -98,20 +155,41 @@ class PengajuanController extends Controller
 
     public function update(Request $request, $id)
     {
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDASI
+        |--------------------------------------------------------------------------
+        */
+
         $request->validate([
+
             'tujuan' => 'required',
+
             'tgl_berangkat' => 'required|date',
+
             'tgl_kembali' => 'required|date',
+
             'estimasi_biaya' => 'nullable|numeric',
 
             'dokumen' => 'nullable|file|mimes:pdf,png,jpg,jpeg,doc,docx|max:2048'
         ]);
 
+        /*
+        |--------------------------------------------------------------------------
+        | AMBIL DATA
+        |--------------------------------------------------------------------------
+        */
+
         $pengajuan = Pengajuan::findOrFail($id);
 
-        $dokumen = $pengajuan->dokumen ?? [];
+        $dokumen = $pengajuan->dokumen;
 
-        // upload file baru
+        /*
+        |--------------------------------------------------------------------------
+        | UPLOAD FILE BARU
+        |--------------------------------------------------------------------------
+        */
+
         if ($request->hasFile('dokumen')) {
 
             $file = $request->file('dokumen');
@@ -120,10 +198,17 @@ class PengajuanController extends Controller
 
             $file->move(public_path('dokumen'), $fileName);
 
-            $dokumen['file'] = $fileName;
+            $dokumen = $fileName;
         }
 
+        /*
+        |--------------------------------------------------------------------------
+        | UPDATE DATA
+        |--------------------------------------------------------------------------
+        */
+
         $pengajuan->update([
+
             'tujuan' => $request->tujuan,
 
             'tgl_berangkat' => $request->tgl_berangkat,
@@ -134,6 +219,12 @@ class PengajuanController extends Controller
 
             'dokumen' => $dokumen,
         ]);
+
+        /*
+        |--------------------------------------------------------------------------
+        | REDIRECT
+        |--------------------------------------------------------------------------
+        */
 
         return redirect()->route('pengajuan.index')
             ->with('success', 'Pengajuan berhasil diperbarui!');
