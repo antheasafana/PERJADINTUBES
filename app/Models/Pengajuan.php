@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Pengajuan extends Model
 {
+    use HasFactory;
+
     /*
     |--------------------------------------------------------------------------
     | TABLE
@@ -30,23 +32,14 @@ class Pengajuan extends Model
     */
 
     protected $fillable = [
-
         'id_pegawai',
-
         'jenis_pengajuan',
-
         'id_pengajuan_parent',
-
         'tujuan',
-
         'tgl_berangkat',
-
         'tgl_kembali',
-
         'estimasi_biaya',
-
         'dokumen',
-
         'status'
     ];
 
@@ -82,7 +75,7 @@ class Pengajuan extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | RELATION REALISASI
+    | RELATION REALISASI DANA
     |--------------------------------------------------------------------------
     */
 
@@ -90,6 +83,21 @@ class Pengajuan extends Model
     {
         return $this->hasOne(
             RealisasiDana::class,
+            'id_pengajuan',
+            'id_pengajuan'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | RELATION TRANSAKSI PENGELUARAN
+    |--------------------------------------------------------------------------
+    */
+
+    public function transaksiPengeluaran()
+    {
+        return $this->hasMany(
+            TransaksiPengeluaran::class,
             'id_pengajuan',
             'id_pengajuan'
         );
