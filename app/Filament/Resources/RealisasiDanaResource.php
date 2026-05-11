@@ -57,12 +57,53 @@ class RealisasiDanaResource extends Resource
 
                             Select::make('id_pengajuan')
                                 ->label('Pengajuan')
+
                                 ->options(
+
                                     Pengajuan::whereDoesntHave('realisasiDana')
+
+                                        ->where(function ($query) {
+
+                                            /*
+                                            |--------------------------------------------------------------------------
+                                            | REIMBURSEMENT & PENGEMBALIAN
+                                            |--------------------------------------------------------------------------
+                                            */
+
+                                            $query->whereIn('jenis_pengajuan', [
+                                                'REIMBURSEMENT',
+                                                'PENGEMBALIAN'
+                                            ])
+
+                                            /*
+                                            |--------------------------------------------------------------------------
+                                            | ATAU UANG MUKA YANG SUDAH APPROVE
+                                            |--------------------------------------------------------------------------
+                                            */
+
+                                            ->orWhere(function ($subQuery) {
+
+                                                $subQuery
+                                                    ->where('jenis_pengajuan', 'UANG_MUKA')
+
+                                                    ->whereHas('verifikasi', function ($verifikasi) {
+
+                                                        $verifikasi->where('status', 'approve');
+
+                                                    });
+
+                                            });
+
+                                        })
+
                                         ->pluck('tujuan', 'id_pengajuan')
+
                                 )
+
                                 ->searchable()
+
                                 ->live()
+
                                 ->afterStateUpdated(function ($state, callable $set) {
 
                                     $pengajuan = Pengajuan::find($state);
@@ -71,29 +112,27 @@ class RealisasiDanaResource extends Resource
 
                                         /*
                                         |--------------------------------------------------------------------------
-                                        | AUTO FILL DATA PENGAJUAN
+                                        | AUTO FILL DATA
                                         |--------------------------------------------------------------------------
                                         */
 
-                                        // jenis pengajuan
                                         $set(
                                             'jenis_pengajuan',
                                             $pengajuan->jenis_pengajuan
                                         );
 
-                                        // tanggal pengajuan
                                         $set(
                                             'tgl_pengajuan',
                                             $pengajuan->created_at?->format('Y-m-d')
                                         );
 
-                                        // dokumen
                                         $set(
                                             'dokumen_spt',
                                             $pengajuan->dokumen
                                         );
                                     }
                                 })
+
                                 ->required(),
 
                             /*
@@ -110,14 +149,18 @@ class RealisasiDanaResource extends Resource
                                 ->label('Tanggal Pengajuan')
                                 ->readOnly(),
 
-                           TextInput::make('dokumen_spt')
-                            ->label('Dokumen')
-                            ->readOnly()
-                            ->suffixAction(
-                                \Filament\Forms\Components\Actions\Action::make('lihat')
-                                    ->icon('heroicon-m-eye')
-                                    ->url(fn ($state) => asset('storage/' . $state), true)
-                            ),
+                            TextInput::make('dokumen_spt')
+                                ->label('Dokumen')
+                                ->readOnly()
+                                ->suffixAction(
+                                    \Filament\Forms\Components\Actions\Action::make('lihat')
+                                        ->icon('heroicon-m-eye')
+                                        ->url(
+                                            fn($state) =>
+                                            asset('dokumen/' . $state),
+                                            true
+                                        )
+                                ),
 
                         ])
                         ->columns(2),
@@ -146,7 +189,7 @@ class RealisasiDanaResource extends Resource
                         ->columns(2),
 
                 ])
-                ->columnSpanFull(),
+                    ->columnSpanFull(),
 
             ])
             ->columns(1);
@@ -183,12 +226,15 @@ class RealisasiDanaResource extends Resource
                     ->dateTime(),
 
             ])
+
             ->filters([
                 //
             ])
+
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
+
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
             ]);
