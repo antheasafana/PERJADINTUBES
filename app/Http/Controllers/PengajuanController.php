@@ -16,7 +16,7 @@ class PengajuanController extends Controller
 
     public function index()
     {
-        $data = Pengajuan::all();
+        $data = Pengajuan::latest()->get();
 
         return view('pengajuan.index', compact('data'));
     }
@@ -31,17 +31,18 @@ class PengajuanController extends Controller
         // VALIDASI
         $request->validate([
             'jenis_pengajuan' => 'required',
-            'tujuan'          => 'required',
-            'tgl_berangkat'   => 'required|date',
-            'tgl_kembali'     => 'required|date',
-            'estimasi_biaya'  => 'required|numeric',
-            'dokumen'         => 'nullable|file|mimes:pdf,png,jpg,jpeg|max:2048'
+            'tujuan' => 'required',
+            'tgl_berangkat' => 'required|date',
+            'tgl_kembali' => 'required|date',
+            'estimasi_biaya' => 'required|numeric',
+
+            'dokumen' => 'nullable|file|mimes:pdf,png,jpg,jpeg,doc,docx|max:2048'
         ]);
 
         // DEFAULT FILE
         $fileName = null;
 
-        // UPLOAD FILE
+        // upload file
         if ($request->hasFile('dokumen')) {
 
             $file = $request->file('dokumen');
@@ -51,55 +52,90 @@ class PengajuanController extends Controller
             $file->move(public_path('dokumen'), $fileName);
         }
 
-        // SIMPAN PENGAJUAN
-        $pengajuan = Pengajuan::create([
-            'id_pegawai'          => auth()->id(),
-            'jenis_pengajuan'     => $request->jenis_pengajuan,
+        // simpan pengajuan
+        Pengajuan::create([
+
+            'id_pegawai' => 1,
+
+            'jenis_pengajuan' => $request->jenis_pengajuan,
+
             'id_pengajuan_parent' => null,
-            'tujuan'              => $request->tujuan,
-            'tgl_berangkat'       => $request->tgl_berangkat,
-            'tgl_kembali'         => $request->tgl_kembali,
-            'estimasi_biaya'      => $request->estimasi_biaya,
-            'dokumen'             => $fileName,
-            'status'              => 'Diajukan'
+
+            'tujuan' => $request->tujuan,
+
+            'tgl_berangkat' => $request->tgl_berangkat,
+
+            'tgl_kembali' => $request->tgl_kembali,
+
+            'estimasi_biaya' => $request->estimasi_biaya,
+
+            // simpan sebagai JSON
+            'dokumen' => [
+                'file' => $fileName
+            ],
+
+            'status' => 'Diajukan'
         ]);
-
-        /*
-        |--------------------------------------------------------------------------
-        | FLOW LOGIC
-        |--------------------------------------------------------------------------
-        | UANG_MUKA
-        | -> wajib verifikasi admin
-        |
-        | REIMBURSEMENT & PENGEMBALIAN
-        | -> langsung masuk realisasi dana
-        |--------------------------------------------------------------------------
-        */
-
-        if ($request->jenis_pengajuan == 'UANG_MUKA') {
-
-            // MASUK VERIFIKASI ADMIN
-            Verifikasi::create([
-                'id_pengajuan'       => $pengajuan->id_pengajuan,
-                'admin_id'           => 1,
-                'level'              => 1,
-                'status'             => 'pending',
-                'tanggal_verifikasi' => null,
-            ]);
-
-        } else {
-
-            // LANGSUNG REALISASI DANA
-            RealisasiDana::create([
-                'id_pengajuan'       => $pengajuan->id_pengajuan,
-                'id_jenis_transaksi' => 1,
-                'tgl_realisasi'      => now(),
-                'total_realisasi'    => $request->estimasi_biaya,
-            ]);
-        }
 
         // REDIRECT
         return redirect('/pengajuan')
             ->with('success', 'Pengajuan berhasil dikirim!');
+    }
+
+    public function show($id)
+    {
+        $pengajuan = Pengajuan::findOrFail($id);
+
+        return view('pengajuan.show', compact('pengajuan'));
+    }
+
+    public function edit($id)
+    {
+        $pengajuan = Pengajuan::findOrFail($id);
+
+        return view('pengajuan.edit', compact('pengajuan'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'tujuan' => 'required',
+            'tgl_berangkat' => 'required|date',
+            'tgl_kembali' => 'required|date',
+            'estimasi_biaya' => 'nullable|numeric',
+
+            'dokumen' => 'nullable|file|mimes:pdf,png,jpg,jpeg,doc,docx|max:2048'
+        ]);
+
+        $pengajuan = Pengajuan::findOrFail($id);
+
+        $dokumen = $pengajuan->dokumen ?? [];
+
+        // upload file baru
+        if ($request->hasFile('dokumen')) {
+
+            $file = $request->file('dokumen');
+
+            $fileName = time() . '.' . $file->getClientOriginalExtension();
+
+            $file->move(public_path('dokumen'), $fileName);
+
+            $dokumen['file'] = $fileName;
+        }
+
+        $pengajuan->update([
+            'tujuan' => $request->tujuan,
+
+            'tgl_berangkat' => $request->tgl_berangkat,
+
+            'tgl_kembali' => $request->tgl_kembali,
+
+            'estimasi_biaya' => $request->estimasi_biaya,
+
+            'dokumen' => $dokumen,
+        ]);
+
+        return redirect()->route('pengajuan.index')
+            ->with('success', 'Pengajuan berhasil diperbarui!');
     }
 }
