@@ -12,4 +12,12 @@ class JenisTransaksi extends Model
     protected $table = 'jenis_transaksi'; // Nama tabel eksplisit
 
     protected $guarded = [];
+    
+    public function pengajuan()
+    {
+    return $this->hasMany(
+        Pengajuan::class,
+        'id_jenis_transaksi'
+    );
+    }
 }

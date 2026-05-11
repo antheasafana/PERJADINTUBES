@@ -29,10 +29,11 @@ class UserResource extends Resource
     protected static ?string $navigationIcon =
         'heroicon-o-user-group';
 
-    // GROUP MENU
-    protected static ?string $navigationGroup =
-        'Master Data';
+    protected static ?string $navigationLabel = 'Users';
 
+    protected static ?string $navigationGroup = 'Lainnya';
+
+    protected static ?int $navigationSort = 999;
     /**
      * FORM
      */
