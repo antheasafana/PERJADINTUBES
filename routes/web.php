@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 // CONTROLLER
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PengajuanController;
+use App\Http\Controllers\TransaksiPengeluaranController;
 
 // =======================
 // LOGIN
@@ -27,7 +28,7 @@ Route::post('/login', [
 Route::post('/logout', [
     AuthController::class,
     'logout'
-]);
+])->name('logout');
 
 // =======================
 // DASHBOARD PEGAWAI
@@ -74,5 +75,35 @@ Route::middleware('pegawai')
         PengajuanController::class,
         'update'
     ])->name('pengajuan.update');
+
+    Route::get('/pengeluaran', [
+    TransaksiPengeluaranController::class,
+    'index'
+])->name('pengeluaran.index');
+
+Route::get('/pengeluaran/create/{id_pengajuan}', [
+    TransaksiPengeluaranController::class,
+    'create'
+])->name('pengeluaran.create');
+
+Route::post('/pengeluaran/store/{id_pengajuan}', [
+    TransaksiPengeluaranController::class,
+    'store'
+])->name('pengeluaran.store');
+
+Route::get('/pengeluaran/{id}', [
+    TransaksiPengeluaranController::class,
+    'show'
+])->name('pengeluaran.show');
+
+Route::post('/pengeluaran/{id}/verifikasi', [
+    TransaksiPengeluaranController::class,
+    'verifikasi'
+])->name('pengeluaran.verifikasi');
+
+Route::post('/pengeluaran/{id}/pembayaran', [
+    TransaksiPengeluaranController::class,
+    'pembayaran'
+])->name('pengeluaran.pembayaran');
 
 });

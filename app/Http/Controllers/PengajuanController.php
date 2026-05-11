@@ -11,12 +11,17 @@ class PengajuanController extends Controller
 {
     public function dashboard()
     {
-        return view('dashboard');
+        return view('pengajuan.dashboard');
     }
 
     public function index()
     {
-        $data = Pengajuan::latest()->get();
+        $data = Pengajuan::with([
+                'realisasiDana',
+                'transaksiPengeluaran'
+            ])
+            ->latest()
+            ->get();
 
         return view('pengajuan.index', compact('data'));
     }
@@ -38,18 +43,10 @@ class PengajuanController extends Controller
             'jenis_pengajuan' => 'required',
             'tujuan' => 'required',
             'tgl_berangkat' => 'required|date',
-            'tgl_kembali' => 'required|date',
-            'estimasi_biaya' => 'required|numeric',
+            'tgl_kembali' => 'required|date|after_or_equal:tgl_berangkat',
+            'estimasi_biaya' => 'required|numeric|min:1',
             'dokumen' => 'nullable|file|mimes:pdf,png,jpg,jpeg,doc,docx|max:2048'
         ]);
-
-        /*
-        |--------------------------------------------------------------------------
-        | DEFAULT FILE
-        |--------------------------------------------------------------------------
-        */
-
-        $fileName = null;
 
         /*
         |--------------------------------------------------------------------------
@@ -57,11 +54,12 @@ class PengajuanController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        if ($request->hasFile('dokumen')) {
+        $fileName = null;
 
+        if ($request->hasFile('dokumen')) {
             $file = $request->file('dokumen');
 
-            $fileName = time() . '.' . $file->getClientOriginalExtension();
+            $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
 
             $file->move(public_path('dokumen'), $fileName);
         }
@@ -73,23 +71,14 @@ class PengajuanController extends Controller
         */
 
         $pengajuan = Pengajuan::create([
-
             'id_pegawai' => 1,
-
             'jenis_pengajuan' => $request->jenis_pengajuan,
-
             'id_pengajuan_parent' => null,
-
             'tujuan' => $request->tujuan,
-
             'tgl_berangkat' => $request->tgl_berangkat,
-
             'tgl_kembali' => $request->tgl_kembali,
-
             'estimasi_biaya' => $request->estimasi_biaya,
-
             'dokumen' => $fileName,
-
             'status' => 'Diajukan'
         ]);
 
@@ -97,35 +86,33 @@ class PengajuanController extends Controller
         |--------------------------------------------------------------------------
         | FLOW PENGAJUAN
         |--------------------------------------------------------------------------
+        |
+        | UANG_MUKA:
+        | Masuk ke verifikasi dulu.
+        |
+        | REIMBURSEMENT / PENGEMBALIAN:
+        | Langsung dibuat realisasi dana, sehingga tombol Input Pengeluaran
+        | bisa muncul di halaman Pengajuan Saya.
+        |
         */
 
-        // UANG MUKA -> MASUK VERIFIKASI
         if ($request->jenis_pengajuan == 'UANG_MUKA') {
-
             Verifikasi::create([
-
                 'id_pengajuan' => $pengajuan->id_pengajuan,
-
                 'admin_id' => 1,
-
                 'level' => 1,
-
                 'status' => 'pending',
-
                 'tanggal_verifikasi' => null,
             ]);
-        }
-
-        // REIMBURSEMENT & PENGEMBALIAN
-        else {
-
+        } else {
             RealisasiDana::create([
-
                 'id_pengajuan' => $pengajuan->id_pengajuan,
-
                 'tgl_realisasi' => now(),
-
                 'total_realisasi' => $request->estimasi_biaya,
+            ]);
+
+            $pengajuan->update([
+                'status' => 'Direalisasikan'
             ]);
         }
 
@@ -135,20 +122,27 @@ class PengajuanController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        return redirect('/pengajuan')
+        return redirect()->route('pengajuan.index')
             ->with('success', 'Pengajuan berhasil dikirim!');
     }
 
     public function show($id)
     {
-        $pengajuan = Pengajuan::findOrFail($id);
+        $pengajuan = Pengajuan::with([
+                'realisasiDana',
+                'transaksiPengeluaran',
+                'verifikasi',
+                'detailBiaya'
+            ])
+            ->findOrFail($id);
 
         return view('pengajuan.show', compact('pengajuan'));
     }
 
     public function edit($id)
     {
-        $pengajuan = Pengajuan::findOrFail($id);
+        $pengajuan = Pengajuan::with('realisasiDana')
+            ->findOrFail($id);
 
         return view('pengajuan.edit', compact('pengajuan'));
     }
@@ -162,15 +156,10 @@ class PengajuanController extends Controller
         */
 
         $request->validate([
-
             'tujuan' => 'required',
-
             'tgl_berangkat' => 'required|date',
-
-            'tgl_kembali' => 'required|date',
-
-            'estimasi_biaya' => 'nullable|numeric',
-
+            'tgl_kembali' => 'required|date|after_or_equal:tgl_berangkat',
+            'estimasi_biaya' => 'nullable|numeric|min:1',
             'dokumen' => 'nullable|file|mimes:pdf,png,jpg,jpeg,doc,docx|max:2048'
         ]);
 
@@ -191,10 +180,9 @@ class PengajuanController extends Controller
         */
 
         if ($request->hasFile('dokumen')) {
-
             $file = $request->file('dokumen');
 
-            $fileName = time() . '.' . $file->getClientOriginalExtension();
+            $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
 
             $file->move(public_path('dokumen'), $fileName);
 
@@ -208,15 +196,10 @@ class PengajuanController extends Controller
         */
 
         $pengajuan->update([
-
             'tujuan' => $request->tujuan,
-
             'tgl_berangkat' => $request->tgl_berangkat,
-
             'tgl_kembali' => $request->tgl_kembali,
-
             'estimasi_biaya' => $request->estimasi_biaya,
-
             'dokumen' => $dokumen,
         ]);
 

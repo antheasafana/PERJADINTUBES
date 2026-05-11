@@ -1,227 +1,388 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <title>@yield('title', 'E-Perjadin')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Dashboard') - PERJADINTUBES</title>
-    <link rel="shortcut icon" type="image/png" href="{{ asset('images/logos/favicon.png') }}" />
-    <link rel="stylesheet" href="{{ asset('css/styles.min.css') }}" />
+
+    {{-- BOOTSTRAP CDN --}}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    {{-- FONT POPPINS --}}
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-        .wizard-step {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0;
+        * {
+            box-sizing: border-box;
         }
-        .wizard-step .step-item {
+
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: #EEF4EF;
+            color: #1f2937;
+        }
+
+        .app-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 245px;
+            min-height: 100vh;
+            background: linear-gradient(180deg, #2E7D5B, #4CAF7A);
+            padding: 30px 24px;
+            color: white;
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            z-index: 100;
+        }
+
+        .sidebar-logo {
+            font-weight: 700;
+            font-size: 30px;
+            margin-bottom: 38px;
+            color: white;
+        }
+
+        .sidebar-menu {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            position: relative;
-            flex: 1;
+            gap: 8px;
         }
-        .wizard-step .step-item:not(:last-child)::after {
-            content: '';
-            position: absolute;
-            top: 18px;
-            left: calc(50% + 20px);
-            right: calc(-50% + 20px);
-            height: 2px;
-            background: #dee2e6;
-            z-index: 0;
-        }
-        .wizard-step .step-item.active:not(:last-child)::after,
-        .wizard-step .step-item.done:not(:last-child)::after {
-            background: #5D87FF;
-        }
-        .step-circle {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
+
+        .sidebar-menu a {
+            display: block;
+            color: white;
+            text-decoration: none;
             font-size: 15px;
-            border: 2px solid #dee2e6;
-            background: white;
-            color: #aaa;
-            z-index: 1;
-            position: relative;
-        }
-        .step-item.active .step-circle {
-            background: #5D87FF;
-            border-color: #5D87FF;
-            color: white;
-        }
-        .step-item.done .step-circle {
-            background: #13DEB9;
-            border-color: #13DEB9;
-            color: white;
-        }
-        .step-label {
-            font-size: 12px;
-            margin-top: 6px;
-            color: #aaa;
             font-weight: 500;
-            text-align: center;
+            padding: 11px 14px;
+            border-radius: 14px;
+            transition: 0.2s ease;
         }
-        .step-item.active .step-label,
-        .step-item.done .step-label {
-            color: #5D87FF;
+
+        .sidebar-menu a:hover,
+        .sidebar-menu a.active {
+            background: rgba(255, 255, 255, 0.20);
+            color: white;
+            transform: translateX(3px);
         }
-        .badge-status-diajukan  { background-color: #FFAE1F; color: white; }
-        .badge-status-approved  { background-color: #13DEB9; color: white; }
-        .badge-status-rejected  { background-color: #FA896B; color: white; }
-        .sidebar-nav .nav-link.active {
-            background: rgba(93,135,255,.1);
-            color: #5D87FF !important;
+
+        .sidebar-footer {
+            margin-top: 40px;
+        }
+
+        .logout-btn {
+            background: white;
+            color: #2E7D5B;
+            border: none;
+            border-radius: 22px;
+            padding: 8px 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .logout-btn:hover {
+            background: #f1f5f3;
+            color: #24674b;
+        }
+
+        /* CONTENT */
+        .content {
+            margin-left: 245px;
+            width: calc(100% - 245px);
+            padding: 36px 50px;
+        }
+
+        /* CARD */
+        .top-card {
+            background: white;
+            border-radius: 26px;
+            padding: 34px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+        }
+
+        .table-card {
+            background: white;
+            border-radius: 22px;
+            padding: 25px;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 22px;
+            padding: 25px;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.05);
+            height: 100%;
+        }
+
+        .stat-card h5 {
+            color: #6c757d;
+            font-size: 15px;
+            margin-bottom: 10px;
+        }
+
+        .stat-card h2 {
+            color: #155F52;
+            font-weight: 700;
+            margin-bottom: 0;
+        }
+
+        .page-title {
+            color: #155F52;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .page-subtitle {
+            color: #6b7280;
+            margin-bottom: 0;
+        }
+
+        /* BUTTON */
+        .btn-green {
+            background: #2E7D5B;
+            color: white;
+            border: none;
+            border-radius: 24px;
+            padding: 9px 22px;
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .btn-green:hover {
+            background: #24674b;
+            color: white;
+        }
+
+        .btn-outline-green {
+            background: transparent;
+            color: #2E7D5B;
+            border: 1px solid #2E7D5B;
+            border-radius: 24px;
+            padding: 8px 20px;
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .btn-outline-green:hover {
+            background: #2E7D5B;
+            color: white;
+        }
+
+        /* TABLE */
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            font-size: 14px;
+            font-weight: 700;
+            color: #111827;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 14px 12px;
+            white-space: nowrap;
+        }
+
+        .table tbody td {
+            font-size: 14px;
+            padding: 14px 12px;
+            vertical-align: middle;
+        }
+
+        .table-hover tbody tr:hover {
+            background: #f8faf9;
+        }
+
+        /* BADGE STATUS */
+        .badge-status {
+            border-radius: 20px;
+            padding: 7px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .badge-verifikasi {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .badge-pembayaran {
+            background: #cff4fc;
+            color: #055160;
+        }
+
+        .badge-tercatat {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .badge-ditolak {
+            background: #f8d7da;
+            color: #842029;
+        }
+
+        .badge-realisasi {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .badge-belum {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        /* FORM */
+        .form-control,
+        .form-select {
+            border-radius: 14px;
+            padding: 10px 14px;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: #2E7D5B;
+            box-shadow: 0 0 0 0.2rem rgba(46, 125, 91, 0.15);
+        }
+
+        label.form-label {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        /* ALERT */
+        .alert {
+            border: none;
+            border-radius: 18px;
+            padding: 14px 18px;
+            margin-bottom: 20px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .app-wrapper {
+                display: block;
+            }
+
+            .sidebar {
+                position: relative;
+                width: 100%;
+                min-height: auto;
+                padding: 24px;
+            }
+
+            .sidebar-logo {
+                font-size: 26px;
+                margin-bottom: 20px;
+            }
+
+            .content {
+                margin-left: 0;
+                width: 100%;
+                padding: 24px;
+            }
+
+            .top-card {
+                padding: 25px;
+            }
+
+            .table-card {
+                padding: 20px;
+            }
         }
     </style>
+
+    @stack('styles')
 </head>
 
 <body>
-<div class="page-wrapper" id="main-wrapper" data-layout="vertical" data-navbarbg="skin6"
-     data-sidebartype="full" data-sidebar-position="fixed" data-header-position="fixed">
+
+<div class="app-wrapper">
 
     {{-- SIDEBAR --}}
-    <aside class="left-sidebar">
-        <div>
-            <div class="brand-logo d-flex align-items-center justify-content-between">
-                <a href="{{ route('dashboard') }}" class="text-nowrap logo-img">
-                    <img src="{{ asset('images/logos/mukena.PNG') }}" width="150" alt="logo">
-                </a>
-                <div class="close-btn d-xl-none d-block sidebartoggler cursor-pointer" id="sidebarCollapse">
-                    <i class="ti ti-x fs-8"></i>
-                </div>
-            </div>
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            E- Perjadin
+        </div>
 
-            <nav class="sidebar-nav scroll-sidebar" data-simplebar>
-                <ul id="sidebarnav">
-                    <li class="nav-small-cap">
-                        <i class="ti ti-dots nav-small-cap-icon fs-4"></i>
-                        <span class="hide-menu">MENU PEGAWAI</span>
-                    </li>
+        <nav class="sidebar-menu">
+            <a href="{{ route('dashboard') }}"
+               class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
+                Dashboard
+            </a>
 
-                    <li class="sidebar-item">
-                        <a class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
-                           href="{{ route('dashboard') }}" aria-expanded="false">
-                            <span><i class="ti ti-layout-dashboard"></i></span>
-                            <span class="hide-menu">Dashboard</span>
-                        </a>
-                    </li>
+            <a href="{{ route('pengajuan.index') }}"
+               class="{{ request()->routeIs('pengajuan.index') || request()->routeIs('pengajuan.view') || request()->routeIs('pengajuan.edit') ? 'active' : '' }}">
+                Pengajuan Saya
+            </a>
 
-                    <li class="sidebar-item">
-                        <a class="sidebar-link {{ request()->routeIs('pengajuan.*') ? 'active' : '' }}"
-                           href="{{ route('pengajuan.index') }}" aria-expanded="false">
-                            <span><i class="ti ti-file-text"></i></span>
-                            <span class="hide-menu">Pengajuan Saya</span>
-                        </a>
-                    </li>
+            <a href="{{ route('pengajuan.create') }}"
+               class="{{ request()->routeIs('pengajuan.create') ? 'active' : '' }}">
+                Buat Pengajuan
+            </a>
 
-                    <li class="sidebar-item">
-                        <a class="sidebar-link {{ request()->routeIs('pengajuan.create') ? 'active' : '' }}"
-                           href="{{ route('pengajuan.create') }}" aria-expanded="false">
-                            <span><i class="ti ti-circle-plus"></i></span>
-                            <span class="hide-menu">Buat Pengajuan</span>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
+            <a href="{{ route('pengeluaran.index') }}"
+               class="{{ request()->routeIs('pengeluaran.*') ? 'active' : '' }}">
+                Transaksi Pengeluaran
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="logout-btn">
+                    Logout
+                </button>
+            </form>
         </div>
     </aside>
 
-    {{-- MAIN WRAPPER --}}
-    <div class="body-wrapper">
+    {{-- CONTENT --}}
+    <main class="content">
 
-        {{-- HEADER --}}
-        <header class="app-header">
-            <nav class="navbar navbar-expand-lg navbar-light">
-                <ul class="navbar-nav">
-                    <li class="nav-item d-block d-xl-none">
-                        <a class="nav-link sidebartoggler nav-icon-hover" id="headerCollapse" href="javascript:void(0)">
-                            <i class="ti ti-menu-2"></i>
-                        </a>
-                    </li>
+        @if(session('success'))
+            <div class="alert alert-success">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger">
+                {{ session('error') }}
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="alert alert-danger">
+                <strong>Terjadi kesalahan:</strong>
+                <ul class="mb-0 mt-2">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
                 </ul>
+            </div>
+        @endif
 
-                <ul class="navbar-nav quick-links d-none d-lg-flex ms-3">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('dashboard') }}">
-                            <i class="ti ti-home me-1"></i> Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ route('pengajuan.index') }}">
-                            <i class="ti ti-file-text me-1"></i> Pengajuan
-                        </a>
-                    </li>
-                </ul>
+        @yield('content')
 
-                <div class="navbar-collapse justify-content-end px-0" id="navbarNav">
-                    <ul class="navbar-nav flex-row ms-auto align-items-center justify-content-end">
-                        <li class="nav-item dropdown">
-                            <a class="nav-link nav-icon-hover" href="javascript:void(0)"
-                               id="drop2" data-bs-toggle="dropdown" aria-expanded="false">
-                                <img src="{{ asset('images/profile/user-1.jpg') }}"
-                                     alt="user" width="35" height="35" class="rounded-circle">
-                            </a>
-                            <div class="dropdown-menu dropdown-menu-end dropdown-menu-animate-up"
-                                 aria-labelledby="drop2">
-                                <div class="message-body">
-                                    <div class="d-flex align-items-center gap-2 py-3 px-4 border-bottom">
-                                        <img src="{{ asset('images/profile/user-1.jpg') }}"
-                                             class="rounded-circle" alt="user-img" width="40" height="40">
-                                        <div>
-                                            <h6 class="mb-0">{{ Auth::user()->name }}</h6>
-                                            <small class="text-muted">{{ Auth::user()->email }}</small>
-                                            <br>
-                                            <span class="badge bg-primary-subtle text-primary">Pegawai</span>
-                                        </div>
-                                    </div>
-                                    <form method="POST" action="/logout">
-                                        @csrf
-                                        <button type="submit"
-                                                class="btn btn-outline-primary mx-3 mt-2 d-block w-85">
-                                            Logout
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
-            </nav>
-        </header>
+    </main>
 
-        {{-- CONTENT --}}
-        <div class="container-fluid">
-            @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
-                    <i class="ti ti-circle-check me-2"></i>
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            @endif
-
-            @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
-                    <i class="ti ti-alert-circle me-2"></i>
-                    {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            @endif
-
-            @yield('content')
-        </div>
-    </div>
 </div>
 
-<script src="{{ asset('libs/jquery/dist/jquery.min.js') }}"></script>
-<script src="{{ asset('libs/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
-<script src="{{ asset('js/sidebarmenu.js') }}"></script>
-<script src="{{ asset('js/app.min.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
 @stack('scripts')
+
 </body>
 </html>
