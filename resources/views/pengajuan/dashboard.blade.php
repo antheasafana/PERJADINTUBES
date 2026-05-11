@@ -2,117 +2,109 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Dashboard</title>
-
+    <title>Dashboard Pegawai</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
-
-        body{
-            background:#f4f7fe;
-            font-family:Segoe UI;
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background: #EEF4EF;
         }
 
-        .sidebar{
-            width:250px;
-            height:100vh;
-            position:fixed;
-            left:0;
-            top:0;
-            background:linear-gradient(180deg,#4f46e5,#7c3aed);
-            padding:30px 20px;
-            color:white;
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            height: 100vh;
+            background: linear-gradient(180deg, #2E7D5B, #4CAF7A);
+            padding: 30px;
+            color: white;
+            position: fixed;
         }
 
-        .main{
-            margin-left:250px;
-            padding:30px;
+        .sidebar h2 {
+            font-weight: 700;
+            margin-bottom: 40px;
         }
 
-        .menu a{
-            display:block;
-            color:white;
-            text-decoration:none;
-            padding:14px;
-            border-radius:10px;
-            margin-bottom:10px;
+        .sidebar a {
+            display: block;
+            color: white;
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-size: 18px;
         }
 
-        .menu a:hover{
-            background:rgba(255,255,255,0.2);
+        .sidebar a:hover {
+            color: #d8f3dc;
         }
 
-        .hero{
-            background:linear-gradient(135deg,#6366f1,#8b5cf6);
-            color:white;
-            padding:40px;
-            border-radius:20px;
+        /* Main content */
+        .main-content {
+            margin-left: 280px;
+            padding: 40px;
         }
 
+        /* Dashboard card */
+        .dashboard-card {
+            background: white;
+            border-radius: 30px;
+            padding: 50px;
+            box-shadow: 0px 5px 20px rgba(0,0,0,0.05);
+        }
+
+        .dashboard-card h1 {
+            color: #1F5E46;
+            font-weight: 700;
+            font-size: 50px;
+        }
+
+        .dashboard-card p {
+            color: #666;
+            font-size: 20px;
+        }
+
+        /* Button */
+        .btn-custom {
+            background: #2E7D5B;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 30px;
+        }
+
+        .btn-custom:hover {
+            background: #25674b;
+            color: white;
+        }
     </style>
-
 </head>
 <body>
 
-<div class="sidebar">
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h2>E-Perjadin</h2>
 
-    <h2>E-Perjadin</h2>
-
-    <div class="menu">
-
-        <a href="/dashboard">
-            Dashboard
-        </a>
-
-        <a href="/pengajuan">
-            Pengajuan Saya
-        </a>
-
-        <a href="/pengajuan/create">
-            Buat Pengajuan
-        </a>
-
+        <a href="/dashboard">Dashboard</a>
+        <a href="/pengajuan">Pengajuan Saya</a>
+        <a href="/pengajuan/create">Buat Pengajuan</a>
     </div>
 
-</div>
+    <!-- Main Content -->
+    <div class="main-content">
 
-<div class="main">
+        <div class="dashboard-card">
+            <h1>Dashboard Pegawai</h1>
+            <p>Selamat datang di sistem perjalanan dinas.</p>
 
-    <div class="hero">
-
-        <h1>Dashboard Pegawai</h1>
-
-        <p>
-            Selamat datang di sistem perjalanan dinas.
-        </p>
-
-        <a href="/pengajuan/create" class="btn btn-light">
-            Buat Pengajuan
-        </a>
+            <a href="/pengajuan/create" class="btn btn-custom mt-3">
+                Buat Pengajuan
+            </a>
+        </div>
 
     </div>
-
-</div>
-
-<!-- SweetAlert -->
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-@if(session('success'))
-
-<script>
-
-    Swal.fire({
-        icon: 'success',
-        title: 'Berhasil',
-        text: '{{ session("success") }}',
-        confirmButtonColor: '#4f46e5'
-    });
-
-</script>
-
-@endif
 
 </body>
 </html>

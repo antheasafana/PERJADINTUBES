@@ -1,169 +1,316 @@
-@extends('pegawai.layout')
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-@section('title', 'Detail Pengajuan #' . $pengajuan->id_pengajuan)
+    <title>Detail Pengajuan #{{ $pengajuan->id_pengajuan }}</title>
 
-@section('content')
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-            <h4 class="mb-sm-0">Detail Pengajuan #{{ $pengajuan->id_pengajuan }}</h4>
-            <a href="{{ route('pegawai.pengajuan.index') }}" class="btn btn-light btn-sm">
-                <i class="ti ti-arrow-left me-1"></i> Kembali
-            </a>
-        </div>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f4f7f4;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .page-title {
+            font-size: 48px;
+            font-weight: 800;
+            color: #0b3d2e;
+        }
+
+        .card {
+            border: none;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        }
+
+        .card-header {
+            background: #2d6a4f;
+            color: white;
+            padding: 24px 32px;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .card-body {
+            padding: 35px;
+            background: white;
+        }
+
+        .info-label {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 6px;
+        }
+
+        .info-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #212529;
+        }
+
+        .status-box {
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .btn-kembali {
+            border-radius: 999px;
+            padding: 10px 28px;
+            background: white;
+            border: 1px solid #ddd;
+            text-decoration: none;
+            color: #333;
+            font-weight: 600;
+            transition: 0.3s;
+        }
+
+        .btn-kembali:hover {
+            background: #f1f1f1;
+        }
+
+        .badge-custom {
+            font-size: 15px;
+            padding: 10px 18px;
+            border-radius: 12px;
+        }
+
+        .dokumen-box {
+            background: #f8f9fa;
+            border-radius: 14px;
+            padding: 18px;
+            margin-bottom: 15px;
+        }
+
+        .btn-lihat {
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container py-5">
+
+    {{-- Header --}}
+    <div class="d-flex align-items-center gap-4 mb-4">
+
+        <a href="{{ route('pengajuan.index') }}" class="btn-kembali">
+            ← Kembali
+        </a>
+
+        <h1 class="page-title mb-0">
+            📄 Detail Pengajuan
+        </h1>
+
     </div>
-</div>
 
-<div class="row justify-content-center">
-    <div class="col-lg-8">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
 
-        {{-- Status Banner --}}
-        @php
-            $statusConfig = match($pengajuan->status) {
-                'Approved' => ['bg' => '#E6FFFA', 'color' => '#13DEB9', 'icon' => 'ti-circle-check', 'text' => 'Pengajuan Anda telah disetujui oleh admin.'],
-                'Rejected' => ['bg' => '#FDEDE8', 'color' => '#FA896B', 'icon' => 'ti-circle-x',    'text' => 'Pengajuan Anda ditolak. Silakan buat pengajuan baru.'],
-                default    => ['bg' => '#FEF5E5', 'color' => '#FFAE1F', 'icon' => 'ti-clock',        'text' => 'Pengajuan Anda sedang menunggu persetujuan admin.'],
-            };
-        @endphp
-        <div class="card mb-4" style="background: {{ $statusConfig['bg'] }}; border: 1.5px solid {{ $statusConfig['color'] }};">
-            <div class="card-body d-flex align-items-center gap-3 py-3">
-                <i class="ti {{ $statusConfig['icon'] }} fs-3" style="color: {{ $statusConfig['color'] }}"></i>
-                <div>
-                    <h6 class="mb-0 fw-semibold" style="color: {{ $statusConfig['color'] }}">Status: {{ $pengajuan->status }}</h6>
-                    <small class="text-muted">{{ $statusConfig['text'] }}</small>
-                </div>
+            {{-- STATUS --}}
+            @php
+                $statusConfig = match($pengajuan->status) {
+
+                    'Approved' => [
+                        'bg' => '#E6FFFA',
+                        'border' => '#13DEB9',
+                        'title' => 'Pengajuan Disetujui',
+                        'text' => 'Pengajuan Anda telah disetujui admin.'
+                    ],
+
+                    'Rejected' => [
+                        'bg' => '#FDEDE8',
+                        'border' => '#FA896B',
+                        'title' => 'Pengajuan Ditolak',
+                        'text' => 'Pengajuan Anda ditolak.'
+                    ],
+
+                    default => [
+                        'bg' => '#FEF5E5',
+                        'border' => '#FFAE1F',
+                        'title' => 'Menunggu Persetujuan',
+                        'text' => 'Pengajuan Anda sedang diproses admin.'
+                    ]
+                };
+            @endphp
+
+            <div class="status-box"
+                 style="background: {{ $statusConfig['bg'] }};
+                        border: 2px solid {{ $statusConfig['border'] }};">
+
+                <h5 class="fw-bold mb-2">
+                    {{ $statusConfig['title'] }}
+                </h5>
+
+                <p class="mb-0 text-muted">
+                    {{ $statusConfig['text'] }}
+                </p>
+
             </div>
-        </div>
 
-        {{-- Detail Pengajuan --}}
-        <div class="card">
-            <div class="card-body p-4">
-                <h5 class="fw-semibold mb-4">Informasi Pengajuan</h5>
+            {{-- CARD --}}
+            <div class="card">
 
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <p class="text-muted small mb-1">Jenis Pengajuan</p>
-                        <span class="badge fs-6 {{ $pengajuan->jenis_pengajuan === 'UANG_MUKA' ? 'bg-primary' : 'bg-warning text-dark' }}">
-                            {{ $pengajuan->jenis_pengajuan === 'UANG_MUKA' ? 'Uang Muka' : 'Reimbursement' }}
-                        </span>
+                <div class="card-header">
+                    <h3>📋 Data Pengajuan #{{ $pengajuan->id_pengajuan }}</h3>
+                </div>
+
+                <div class="card-body">
+
+                    <div class="row g-4">
+
+                        <div class="col-md-6">
+
+                            <div class="info-label">
+                                Jenis Pengajuan
+                            </div>
+
+                            @if($pengajuan->jenis_pengajuan == 'UANG_MUKA')
+
+                                <span class="badge bg-primary badge-custom">
+                                    Uang Muka
+                                </span>
+
+                            @else
+
+                                <span class="badge bg-warning text-dark badge-custom">
+                                    Reimbursement
+                                </span>
+
+                            @endif
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <div class="info-label">
+                                Tujuan Perjalanan
+                            </div>
+
+                            <div class="info-value">
+                                {{ $pengajuan->tujuan }}
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <div class="info-label">
+                                Tanggal Berangkat
+                            </div>
+
+                            <div class="info-value">
+                                {{ \Carbon\Carbon::parse($pengajuan->tgl_berangkat)->format('d M Y') }}
+                            </div>
+
+                        </div>
+
+                        <div class="col-md-6">
+
+                            <div class="info-label">
+                                Tanggal Kembali
+                            </div>
+
+                            <div class="info-value">
+                                {{ \Carbon\Carbon::parse($pengajuan->tgl_kembali)->format('d M Y') }}
+                            </div>
+
+                        </div>
+
+                        @if($pengajuan->estimasi_biaya)
+
+                        <div class="col-md-6">
+
+                            <div class="info-label">
+                                Estimasi Biaya
+                            </div>
+
+                            <div class="info-value text-success">
+                                Rp {{ number_format($pengajuan->estimasi_biaya, 0, ',', '.') }}
+                            </div>
+
+                        </div>
+
+                        @endif
+
+                        <div class="col-md-6">
+
+                            <div class="info-label">
+                                Tanggal Dibuat
+                            </div>
+
+                            <div class="info-value">
+                                {{ $pengajuan->created_at->format('d M Y, H:i') }} WIB
+                            </div>
+
+                        </div>
+
                     </div>
 
-                    <div class="col-md-6">
-                        <p class="text-muted small mb-1">Tujuan Perjalanan</p>
-                        <p class="fw-semibold mb-0">{{ $pengajuan->tujuan }}</p>
+                    <hr class="my-5">
+
+                    {{-- DOKUMEN --}}
+                    <h4 class="fw-bold mb-4">
+                        📎 Dokumen Terlampir
+                    </h4>
+
+                    @php
+
+                        $dokumen = $pengajuan->dokumen ?? [];
+
+                        if(is_string($dokumen)){
+                            $dokumen = json_decode($dokumen, true);
+                        }
+
+                    @endphp
+
+                    @if(!empty($dokumen['file']))
+
+                    <div class="dokumen-box d-flex justify-content-between align-items-center">
+
+                        <div>
+
+                            <h6 class="fw-bold mb-1">
+                                File Pengajuan
+                            </h6>
+
+                            <small class="text-muted">
+                                {{ $dokumen['file'] }}
+                            </small>
+
+                        </div>
+
+                        <a href="{{ asset('dokumen/' . $dokumen['file']) }}"
+                           target="_blank"
+                           class="btn btn-primary btn-lihat">
+
+                            Lihat
+
+                        </a>
+
                     </div>
 
-                    <div class="col-md-6">
-                        <p class="text-muted small mb-1">Tanggal Berangkat</p>
-                        <p class="fw-semibold mb-0">
-                            <i class="ti ti-calendar me-1 text-primary"></i>
-                            {{ \Carbon\Carbon::parse($pengajuan->tgl_berangkat)->format('d M Y') }}
-                        </p>
-                    </div>
+                    @else
 
-                    <div class="col-md-6">
-                        <p class="text-muted small mb-1">Tanggal Kembali</p>
-                        <p class="fw-semibold mb-0">
-                            <i class="ti ti-calendar me-1 text-primary"></i>
-                            {{ \Carbon\Carbon::parse($pengajuan->tgl_kembali)->format('d M Y') }}
-                        </p>
-                    </div>
+                    <p class="text-muted">
+                        Tidak ada dokumen terlampir.
+                    </p>
 
-                    @if($pengajuan->estimasi_biaya)
-                    <div class="col-md-6">
-                        <p class="text-muted small mb-1">Estimasi Biaya</p>
-                        <p class="fw-semibold mb-0 text-success fs-5">
-                            Rp {{ number_format($pengajuan->estimasi_biaya, 0, ',', '.') }}
-                        </p>
-                    </div>
                     @endif
 
-                    <div class="col-md-6">
-                        <p class="text-muted small mb-1">Tanggal Dibuat</p>
-                        <p class="fw-semibold mb-0">{{ $pengajuan->created_at->format('d M Y, H:i') }} WIB</p>
-                    </div>
                 </div>
-
-                <hr class="my-4">
-
-                {{-- Dokumen --}}
-                <h6 class="fw-semibold mb-3">Dokumen Terlampir</h6>
-                @php $dokumen = $pengajuan->dokumen ?? []; @endphp
-
-                @if(empty($dokumen))
-                    <p class="text-muted">Tidak ada dokumen terlampir.</p>
-                @else
-                    <div class="d-flex flex-column gap-3">
-                        @if(!empty($dokumen['surat_tugas']))
-                            <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="ti ti-file-text fs-5 text-primary"></i>
-                                    <div>
-                                        <p class="mb-0 fw-medium">Surat Tugas</p>
-                                        <small class="text-muted">{{ basename($dokumen['surat_tugas']) }}</small>
-                                    </div>
-                                </div>
-                                <a href="{{ asset('storage/' . $dokumen['surat_tugas']) }}"
-                                   target="_blank" class="btn btn-sm btn-primary">
-                                    <i class="ti ti-download me-1"></i>Lihat
-                                </a>
-                            </div>
-                        @endif
-
-                        @if(!empty($dokumen['lpj']))
-                            <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="ti ti-file-description fs-5 text-warning"></i>
-                                    <div>
-                                        <p class="mb-0 fw-medium">LPJ (Laporan Pertanggungjawaban)</p>
-                                        <small class="text-muted">{{ basename($dokumen['lpj']) }}</small>
-                                    </div>
-                                </div>
-                                <a href="{{ asset('storage/' . $dokumen['lpj']) }}"
-                                   target="_blank" class="btn btn-sm btn-primary">
-                                    <i class="ti ti-download me-1"></i>Lihat
-                                </a>
-                            </div>
-                        @endif
-
-                        @if(!empty($dokumen['sppd']))
-                            <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded-3">
-                                <div class="d-flex align-items-center gap-2">
-                                    <i class="ti ti-file-invoice fs-5 text-success"></i>
-                                    <div>
-                                        <p class="mb-0 fw-medium">SPPD</p>
-                                        <small class="text-muted">{{ basename($dokumen['sppd']) }}</small>
-                                    </div>
-                                </div>
-                                <a href="{{ asset('storage/' . $dokumen['sppd']) }}"
-                                   target="_blank" class="btn btn-sm btn-primary">
-                                    <i class="ti ti-download me-1"></i>Lihat
-                                </a>
-                            </div>
-                        @endif
-
-                        @if(!empty($dokumen['dokumentasi']))
-                            <div class="p-3 bg-light rounded-3">
-                                <div class="d-flex align-items-center gap-2 mb-2">
-                                    <i class="ti ti-photos fs-5 text-info"></i>
-                                    <p class="mb-0 fw-medium">Dokumentasi Kegiatan ({{ count($dokumen['dokumentasi']) }} file)</p>
-                                </div>
-                                <div class="d-flex flex-wrap gap-2">
-                                    @foreach($dokumen['dokumentasi'] as $i => $doc)
-                                        <a href="{{ asset('storage/' . $doc) }}" target="_blank"
-                                           class="btn btn-sm btn-outline-info">
-                                            <i class="ti ti-photo me-1"></i>Foto {{ $i + 1 }}
-                                        </a>
-                                    @endforeach
-                                </div>
-                            </div>
-                        @endif
-                    </div>
-                @endif
-
             </div>
-        </div>
 
+        </div>
     </div>
 </div>
-@endsection
+
+</body>
+</html>

@@ -89,7 +89,7 @@
     <aside class="left-sidebar">
         <div>
             <div class="brand-logo d-flex align-items-center justify-content-between">
-                <a href="{{ route('pegawai.dashboard') }}" class="text-nowrap logo-img">
+                <a href="{{ route('dashboard') }}" class="text-nowrap logo-img">
                     <img src="{{ asset('images/logos/mukena.PNG') }}" width="150" alt="logo">
                 </a>
                 <div class="close-btn d-xl-none d-block sidebartoggler cursor-pointer" id="sidebarCollapse">
@@ -105,24 +105,24 @@
                     </li>
 
                     <li class="sidebar-item">
-                        <a class="sidebar-link {{ request()->routeIs('pegawai.dashboard') ? 'active' : '' }}"
-                           href="{{ route('pegawai.dashboard') }}" aria-expanded="false">
+                        <a class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
+                           href="{{ route('dashboard') }}" aria-expanded="false">
                             <span><i class="ti ti-layout-dashboard"></i></span>
                             <span class="hide-menu">Dashboard</span>
                         </a>
                     </li>
 
                     <li class="sidebar-item">
-                        <a class="sidebar-link {{ request()->routeIs('pegawai.pengajuan.*') ? 'active' : '' }}"
-                           href="{{ route('pegawai.pengajuan.index') }}" aria-expanded="false">
+                        <a class="sidebar-link {{ request()->routeIs('pengajuan.*') ? 'active' : '' }}"
+                           href="{{ route('pengajuan.index') }}" aria-expanded="false">
                             <span><i class="ti ti-file-text"></i></span>
                             <span class="hide-menu">Pengajuan Saya</span>
                         </a>
                     </li>
 
                     <li class="sidebar-item">
-                        <a class="sidebar-link {{ request()->routeIs('pegawai.pengajuan.create') ? 'active' : '' }}"
-                           href="{{ route('pegawai.pengajuan.create') }}" aria-expanded="false">
+                        <a class="sidebar-link {{ request()->routeIs('pengajuan.create') ? 'active' : '' }}"
+                           href="{{ route('pengajuan.create') }}" aria-expanded="false">
                             <span><i class="ti ti-circle-plus"></i></span>
                             <span class="hide-menu">Buat Pengajuan</span>
                         </a>
@@ -148,12 +148,12 @@
 
                 <ul class="navbar-nav quick-links d-none d-lg-flex ms-3">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('pegawai.dashboard') }}">
+                        <a class="nav-link" href="{{ route('dashboard') }}">
                             <i class="ti ti-home me-1"></i> Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('pegawai.pengajuan.index') }}">
+                        <a class="nav-link" href="{{ route('pengajuan.index') }}">
                             <i class="ti ti-file-text me-1"></i> Pengajuan
                         </a>
                     </li>

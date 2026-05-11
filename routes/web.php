@@ -38,10 +38,8 @@ Route::middleware('pegawai')
 
     // DASHBOARD
     Route::get('/dashboard', function () {
-
         return view('pengajuan.dashboard');
-
-    });
+    })->name('dashboard'); // ← TAMBAHAN NAMA ROUTE
 
     // =======================
     // PENGAJUAN
@@ -61,5 +59,20 @@ Route::middleware('pegawai')
         PengajuanController::class,
         'store'
     ])->name('pengajuan.store');
+
+    Route::get('/pengajuan/{id}/view', [
+        PengajuanController::class,
+        'show'
+    ])->name('pengajuan.view');
+
+    Route::get('/pengajuan/{id}/edit', [
+        PengajuanController::class,
+        'edit'
+    ])->name('pengajuan.edit');
+
+    Route::put('/pengajuan/{id}', [
+        PengajuanController::class,
+        'update'
+    ])->name('pengajuan.update');
 
 });
