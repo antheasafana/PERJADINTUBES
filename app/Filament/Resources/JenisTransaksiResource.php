@@ -21,13 +21,13 @@ use Filament\Tables\Columns\TextColumn;
 
 class JenisTransaksiResource extends Resource
 {
+    protected static ?string $navigationGroup = 'Master Data';
+
+    protected static ?int $navigationSort = 3;
+
     protected static ?string $model = JenisTransaksi::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-
-    protected static ?string $navigationLabel = 'Jenis Transaksi';
-
-    protected static ?string $pluralModelLabel = 'Jenis Transaksi';
 
     protected static ?string $modelLabel = 'Jenis Transaksi';
 

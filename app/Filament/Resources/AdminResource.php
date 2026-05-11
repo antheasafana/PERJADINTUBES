@@ -29,8 +29,13 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Forms\Components\Grid;
 
+
 class AdminResource extends Resource
 {
+    protected static ?string $navigationGroup = 'Master Data';
+
+    protected static ?int $navigationSort = 1;
+
     protected static ?string $model = Admin::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';

@@ -31,6 +31,10 @@ use Filament\Forms\Components\Grid;
 
 class PegawaiResource extends Resource
 {
+    protected static ?string $navigationGroup = 'Master Data';
+
+    protected static ?int $navigationSort = 2;
+
     protected static ?string $model = Pegawai::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';

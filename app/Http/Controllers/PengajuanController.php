@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Pengajuan;
+use App\Models\Verifikasi;
+use App\Models\RealisasiDana;
 
 class PengajuanController extends Controller
 {
@@ -26,6 +28,7 @@ class PengajuanController extends Controller
 
     public function store(Request $request)
     {
+        // VALIDASI
         $request->validate([
             'jenis_pengajuan' => 'required',
             'tujuan' => 'required',
@@ -36,6 +39,7 @@ class PengajuanController extends Controller
             'dokumen' => 'nullable|file|mimes:pdf,png,jpg,jpeg,doc,docx|max:2048'
         ]);
 
+        // DEFAULT FILE
         $fileName = null;
 
         // upload file
@@ -73,6 +77,7 @@ class PengajuanController extends Controller
             'status' => 'Diajukan'
         ]);
 
+        // REDIRECT
         return redirect('/pengajuan')
             ->with('success', 'Pengajuan berhasil dikirim!');
     }

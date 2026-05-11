@@ -7,53 +7,151 @@ use Illuminate\Database\Eloquent\Model;
 
 class Pengajuan extends Model
 {
-    use HasFactory;
+    /*
+    |--------------------------------------------------------------------------
+    | TABLE
+    |--------------------------------------------------------------------------
+    */
 
     protected $table = 'pengajuan';
 
+    /*
+    |--------------------------------------------------------------------------
+    | PRIMARY KEY
+    |--------------------------------------------------------------------------
+    */
+
     protected $primaryKey = 'id_pengajuan';
 
-    protected $fillable = [
-        'id_pegawai',
-        'jenis_pengajuan',
-        'id_pengajuan_parent',
-        'tujuan',
-        'tgl_berangkat',
-        'tgl_kembali',
-        'estimasi_biaya',
-        'dokumen',
-        'status'
-    ];
+    /*
+    |--------------------------------------------------------------------------
+    | MASS ASSIGNMENT
+    |--------------------------------------------------------------------------
+    */
 
-    protected $casts = [
-        'dokumen' => 'array',
-        'tgl_berangkat' => 'date',
-        'tgl_kembali' => 'date',
+    protected $fillable = [
+
+        'id_pegawai',
+
+        'jenis_pengajuan',
+
+        'id_pengajuan_parent',
+
+        'tujuan',
+
+        'tgl_berangkat',
+
+        'tgl_kembali',
+
+        'estimasi_biaya',
+
+        'dokumen',
+
+        'status'
     ];
 
     /*
     |--------------------------------------------------------------------------
-    | RELATIONSHIP
+    | RELATION PEGAWAI
     |--------------------------------------------------------------------------
     */
 
     public function pegawai()
     {
-        return $this->belongsTo(User::class, 'id_pegawai');
+        return $this->belongsTo(
+            Pegawai::class,
+            'id_pegawai',
+            'id_pegawai'
+        );
     }
 
-    public function parent()
+    /*
+    |--------------------------------------------------------------------------
+    | RELATION JENIS TRANSAKSI
+    |--------------------------------------------------------------------------
+    */
+
+    public function jenisTransaksi()
     {
-        return $this->belongsTo(Pengajuan::class, 'id_pengajuan_parent');
+        return $this->belongsTo(
+            JenisTransaksi::class,
+            'jenis_pengajuan',
+            'id'
+        );
     }
 
-    public function children()
+    /*
+    |--------------------------------------------------------------------------
+    | RELATION REALISASI
+    |--------------------------------------------------------------------------
+    */
+
+    public function realisasiDana()
     {
-        return $this->hasMany(Pengajuan::class, 'id_pengajuan_parent');
+        return $this->hasOne(
+            RealisasiDana::class,
+            'id_pengajuan',
+            'id_pengajuan'
+        );
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | RELATION VERIFIKASI
+    |--------------------------------------------------------------------------
+    */
 
     public function verifikasi()
     {
-        return $this->hasOne(Verifikasi::class, 'id_pengajuan');
+        return $this->hasMany(
+            Verifikasi::class,
+            'id_pengajuan',
+            'id_pengajuan'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | RELATION DETAIL BIAYA
+    |--------------------------------------------------------------------------
+    */
+
+    public function detailBiaya()
+    {
+        return $this->hasMany(
+            DetailBiaya::class,
+            'id_pengajuan',
+            'id_pengajuan'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | PARENT PENGAJUAN
+    |--------------------------------------------------------------------------
+    */
+
+    public function parent()
+    {
+        return $this->belongsTo(
+            Pengajuan::class,
+            'id_pengajuan_parent',
+            'id_pengajuan'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CHILD PENGAJUAN
+    |--------------------------------------------------------------------------
+    */
+
+    public function children()
+    {
+        return $this->hasMany(
+            Pengajuan::class,
+            'id_pengajuan_parent',
+            'id_pengajuan'
+        );
     }
 }
