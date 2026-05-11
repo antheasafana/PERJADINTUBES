@@ -4,27 +4,21 @@ namespace App\Filament\Resources;
 
 use App\Models\TransaksiPengeluaran;
 
-use App\Filament\Resources\VerifikasiResource\Pages;
-
-use Filament\Forms;
-use Filament\Tables;
-
-use Filament\Forms\Form;
-use Filament\Tables\Table;
+use App\Filament\Resources\PembayaranResource\Pages;
 
 use Filament\Resources\Resource;
 
-use Filament\Forms\Components\Textarea;
+use Filament\Tables;
+use Filament\Tables\Table;
 
 use Filament\Tables\Columns\TextColumn;
 
-class VerifikasiResource extends Resource
+class PembayaranResource extends Resource
 {
     /*
     |--------------------------------------------------------------------------
     | MODEL
     |--------------------------------------------------------------------------
-    | Menggunakan transaksi pengeluaran
     */
 
     protected static ?string $model =
@@ -37,15 +31,15 @@ class VerifikasiResource extends Resource
     */
 
     protected static ?string $navigationIcon =
-        'heroicon-o-check-badge';
+        'heroicon-o-banknotes';
 
     protected static ?string $navigationLabel =
-        'Verifikasi Pengeluaran';
+        'Pembayaran';
 
     protected static ?string $navigationGroup =
         'Transaksi';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 3;
 
     /*
     |--------------------------------------------------------------------------
@@ -53,27 +47,12 @@ class VerifikasiResource extends Resource
     |--------------------------------------------------------------------------
     */
 
-    public static function form(Form $form): Form
-    {
+    public static function form(
+        \Filament\Forms\Form $form
+    ): \Filament\Forms\Form {
+
         return $form
-            ->schema([
-
-                /*
-                |--------------------------------------------------------------------------
-                | CATATAN VERIFIKASI
-                |--------------------------------------------------------------------------
-                */
-
-                Textarea::make(
-                    'catatan_verifikasi'
-                )
-
-                    ->label(
-                        'Catatan Verifikasi'
-                    )
-
-                    ->rows(4),
-            ]);
+            ->schema([]);
     }
 
     /*
@@ -82,13 +61,15 @@ class VerifikasiResource extends Resource
     |--------------------------------------------------------------------------
     */
 
-    public static function table(Table $table): Table
-    {
+    public static function table(
+        Table $table
+    ): Table {
+
         return $table
 
             /*
             |--------------------------------------------------------------------------
-            | HANYA DATA MENUNGGU VERIFIKASI
+            | HANYA STATUS PEMBAYARAN
             |--------------------------------------------------------------------------
             */
 
@@ -98,7 +79,7 @@ class VerifikasiResource extends Resource
 
                     ->where(
                         'status',
-                        'verifikasi_pengeluaran'
+                        'pembayaran'
                     )
             )
 
@@ -122,7 +103,7 @@ class VerifikasiResource extends Resource
 
                 /*
                 |--------------------------------------------------------------------------
-                | JENIS
+                | JENIS PENGELUARAN
                 |--------------------------------------------------------------------------
                 */
 
@@ -146,9 +127,9 @@ class VerifikasiResource extends Resource
                     'uraian'
                 )
 
-                    ->searchable()
+                    ->limit(40)
 
-                    ->limit(40),
+                    ->searchable(),
 
                 /*
                 |--------------------------------------------------------------------------
@@ -160,9 +141,7 @@ class VerifikasiResource extends Resource
                     'nominal'
                 )
 
-                    ->money(
-                        'IDR'
-                    ),
+                    ->money('IDR'),
 
                 /*
                 |--------------------------------------------------------------------------
@@ -180,17 +159,11 @@ class VerifikasiResource extends Resource
                         string $state
                     ): string => match ($state) {
 
-                        'verifikasi_pengeluaran'
-                            => 'warning',
-
                         'pembayaran'
-                            => 'info',
+                            => 'warning',
 
                         'transaksi_tercatat'
                             => 'success',
-
-                        'ditolak'
-                            => 'danger',
 
                         default
                             => 'gray',
@@ -198,15 +171,15 @@ class VerifikasiResource extends Resource
 
                 /*
                 |--------------------------------------------------------------------------
-                | TANGGAL PENGELUARAN
+                | TANGGAL VERIFIKASI
                 |--------------------------------------------------------------------------
                 */
 
                 TextColumn::make(
-                    'tanggal_pengeluaran'
+                    'tanggal_verifikasi'
                 )
 
-                    ->date(),
+                    ->dateTime(),
             ])
 
             ->filters([
@@ -217,25 +190,16 @@ class VerifikasiResource extends Resource
 
                 /*
                 |--------------------------------------------------------------------------
-                | DETAIL
+                | TOMBOL BAYAR
                 |--------------------------------------------------------------------------
-                */
-
-                Tables\Actions\ViewAction::make(),
-
-                /*
-                |--------------------------------------------------------------------------
-                | VERIFIKASI
-                |--------------------------------------------------------------------------
-                | ADMIN MENYETUJUI
                 */
 
                 Tables\Actions\Action::make(
-                    'verifikasi'
+                    'bayar'
                 )
 
                     ->label(
-                        'Verifikasi'
+                        'Bayar'
                     )
 
                     ->color(
@@ -243,7 +207,7 @@ class VerifikasiResource extends Resource
                     )
 
                     ->icon(
-                        'heroicon-o-check-circle'
+                        'heroicon-o-banknotes'
                     )
 
                     ->requiresConfirmation()
@@ -252,12 +216,21 @@ class VerifikasiResource extends Resource
                         $record
                     ) {
 
+                        /*
+                        |--------------------------------------------------------------------------
+                        | UPDATE STATUS
+                        |--------------------------------------------------------------------------
+                        */
+
                         $record->update([
 
                             'status' =>
-                                'pembayaran',
+                                'transaksi_tercatat',
 
-                            'tanggal_verifikasi' =>
+                            'tanggal_pembayaran' =>
+                                now(),
+
+                            'tanggal_tercatat' =>
                                 now(),
                         ]);
 
@@ -274,66 +247,9 @@ class VerifikasiResource extends Resource
                             $record->pengajuan->update([
 
                                 'status' =>
-                                    'Pembayaran'
+                                    'Transaksi Tercatat'
                             ]);
                         }
-                    }),
-
-                /*
-                |--------------------------------------------------------------------------
-                | TOLAK
-                |--------------------------------------------------------------------------
-                */
-
-                Tables\Actions\Action::make(
-                    'tolak'
-                )
-
-                    ->label(
-                        'Tolak'
-                    )
-
-                    ->color(
-                        'danger'
-                    )
-
-                    ->icon(
-                        'heroicon-o-x-circle'
-                    )
-
-                    ->requiresConfirmation()
-
-                    ->form([
-
-                        Textarea::make(
-                            'catatan_verifikasi'
-                        )
-
-                            ->label(
-                                'Alasan Penolakan'
-                            )
-
-                            ->required(),
-                    ])
-
-                    ->action(function (
-                        array $data,
-                        $record
-                    ) {
-
-                        $record->update([
-
-                            'status' =>
-                                'ditolak',
-
-                            'catatan_verifikasi' =>
-                                $data[
-                                    'catatan_verifikasi'
-                                ],
-
-                            'tanggal_verifikasi' =>
-                                now(),
-                        ]);
                     }),
             ])
 
@@ -371,13 +287,13 @@ class VerifikasiResource extends Resource
         return [
 
             'index' =>
-                Pages\ListVerifikasis::route('/'),
+                Pages\ListPembayarans::route('/'),
 
             'create' =>
-                Pages\CreateVerifikasi::route('/create'),
+                Pages\CreatePembayaran::route('/create'),
 
             'edit' =>
-                Pages\EditVerifikasi::route('/{record}/edit'),
+                Pages\EditPembayaran::route('/{record}/edit'),
         ];
     }
 }
