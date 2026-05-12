@@ -100,5 +100,11 @@ class Kernel extends HttpKernel
         'pegawai' =>
             \App\Http\Middleware\PegawaiMiddleware::class,
 
+        // =========================
+        // ADMIN MIDDLEWARE
+        // =========================
+        'admin' =>
+            \App\Http\Middleware\AdminMiddleware::class,
+
     ];
 }

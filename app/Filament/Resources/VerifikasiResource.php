@@ -2,8 +2,7 @@
 
 namespace App\Filament\Resources;
 
-use App\Models\TransaksiPengeluaran;
-
+use App\Models\Verifikasi;
 use App\Filament\Resources\VerifikasiResource\Pages;
 
 use Filament\Forms;
@@ -15,8 +14,10 @@ use Filament\Tables\Table;
 use Filament\Resources\Resource;
 
 use Filament\Forms\Components\Textarea;
-
 use Filament\Tables\Columns\TextColumn;
+
+use App\Models\RealisasiDana;
+use App\Models\TransaksiPengeluaran;
 
 class VerifikasiResource extends Resource
 {
@@ -24,23 +25,18 @@ class VerifikasiResource extends Resource
     |--------------------------------------------------------------------------
     | MODEL
     |--------------------------------------------------------------------------
-    | Menggunakan transaksi pengeluaran
+    | ✅ FIX: Gunakan model Verifikasi (bukan TransaksiPengeluaran)
+    | Verifikasi di sini adalah approval admin atas pengajuan UANG_MUKA
+    | sesuai alur Step ② di gambar.
     */
 
-    protected static ?string $model =
-        TransaksiPengeluaran::class;
-
-    /*
-    |--------------------------------------------------------------------------
-    | NAVIGATION
-    |--------------------------------------------------------------------------
-    */
+    protected static ?string $model = Verifikasi::class;
 
     protected static ?string $navigationIcon =
         'heroicon-o-check-badge';
 
     protected static ?string $navigationLabel =
-        'Verifikasi Pengeluaran';
+        'Verifikasi Pengajuan';
 
     protected static ?string $navigationGroup =
         'Transaksi';
@@ -58,20 +54,12 @@ class VerifikasiResource extends Resource
         return $form
             ->schema([
 
-                /*
-                |--------------------------------------------------------------------------
-                | CATATAN VERIFIKASI
-                |--------------------------------------------------------------------------
-                */
+                Textarea::make('catatan')
+                    ->label('Catatan Verifikasi')
+                    ->rows(4),
 
-                Textarea::make(
-                    'catatan_verifikasi'
-                )
-
-                    ->label(
-                        'Catatan Verifikasi'
-                    )
-
+                Textarea::make('alasan_reject')
+                    ->label('Alasan Reject')
                     ->rows(4),
             ]);
     }
@@ -88,296 +76,150 @@ class VerifikasiResource extends Resource
 
             /*
             |--------------------------------------------------------------------------
-            | HANYA DATA MENUNGGU VERIFIKASI
+            | HANYA STATUS PENDING (menunggu approval admin)
             |--------------------------------------------------------------------------
             */
 
             ->query(
-
-                TransaksiPengeluaran::query()
-
-                    ->where(
-                        'status',
-                        'verifikasi_pengeluaran'
-                    )
+                Verifikasi::query()
+                    ->where('status', 'pending')
+                    ->with(['pengajuan', 'transaksiPengeluaran'])
             )
 
             ->columns([
 
-                /*
-                |--------------------------------------------------------------------------
-                | ID PENGAJUAN
-                |--------------------------------------------------------------------------
-                */
+                TextColumn::make('id')
+                    ->label('ID'),
 
-                TextColumn::make(
-                    'pengajuan.id_pengajuan'
-                )
-
-                    ->label(
-                        'ID Pengajuan'
-                    )
-
-                    ->searchable(),
-
-                /*
-                |--------------------------------------------------------------------------
-                | JENIS
-                |--------------------------------------------------------------------------
-                */
-
-                TextColumn::make(
-                    'jenis_pengeluaran'
-                )
-
-                    ->label(
-                        'Jenis'
-                    )
-
+                TextColumn::make('verification_type')
+                    ->label('Jenis Verifikasi')
                     ->badge(),
 
-                /*
-                |--------------------------------------------------------------------------
-                | URAIAN
-                |--------------------------------------------------------------------------
-                */
-
-                TextColumn::make(
-                    'uraian'
-                )
-
+                TextColumn::make('transaksiPengeluaran.id_transaksi_pengeluaran')
+                    ->label('ID Transaksi')
                     ->searchable()
+                    ->sortable(),
 
-                    ->limit(40),
+                TextColumn::make('pengajuan.tujuan')
+                    ->label('Tujuan Pengajuan')
+                    ->searchable(),
 
-                /*
-                |--------------------------------------------------------------------------
-                | NOMINAL
-                |--------------------------------------------------------------------------
-                */
+                TextColumn::make('pengajuan.jenis_pengajuan')
+                    ->label('Jenis Pengajuan')
+                    ->badge(),
 
-                TextColumn::make(
-                    'nominal'
-                )
+                TextColumn::make('pengajuan.estimasi_biaya')
+                    ->label('Estimasi Biaya')
+                    ->money('IDR'),
 
-                    ->money(
-                        'IDR'
-                    ),
-
-                /*
-                |--------------------------------------------------------------------------
-                | STATUS
-                |--------------------------------------------------------------------------
-                */
-
-                TextColumn::make(
-                    'status'
-                )
-
+                TextColumn::make('status')
                     ->badge()
-
-                    ->color(fn (
-                        string $state
-                    ): string => match ($state) {
-
-                        'verifikasi_pengeluaran'
-                            => 'warning',
-
-                        'pembayaran'
-                            => 'info',
-
-                        'transaksi_tercatat'
-                            => 'success',
-
-                        'ditolak'
-                            => 'danger',
-
-                        default
-                            => 'gray',
+                    ->color(fn (string $state): string => match ($state) {
+                        'pending'  => 'warning',
+                        'approve'  => 'success',
+                        'reject'   => 'danger',
+                        default    => 'gray',
                     }),
 
-                /*
-                |--------------------------------------------------------------------------
-                | TANGGAL PENGELUARAN
-                |--------------------------------------------------------------------------
-                */
-
-                TextColumn::make(
-                    'tanggal_pengeluaran'
-                )
-
-                    ->date(),
+                TextColumn::make('created_at')
+                    ->label('Tanggal Masuk')
+                    ->dateTime(),
             ])
 
-            ->filters([
-
-            ])
+            ->filters([])
 
             ->actions([
-
-                /*
-                |--------------------------------------------------------------------------
-                | DETAIL
-                |--------------------------------------------------------------------------
-                */
 
                 Tables\Actions\ViewAction::make(),
 
                 /*
                 |--------------------------------------------------------------------------
-                | VERIFIKASI
+                | APPROVE → trigger Realisasi Dana
                 |--------------------------------------------------------------------------
-                | ADMIN MENYETUJUI
+                | Setelah approve, status pengajuan berubah → admin bisa buat Realisasi Dana
                 */
 
-                Tables\Actions\Action::make(
-                    'verifikasi'
-                )
-
-                    ->label(
-                        'Verifikasi'
-                    )
-
-                    ->color(
-                        'success'
-                    )
-
-                    ->icon(
-                        'heroicon-o-check-circle'
-                    )
-
+                Tables\Actions\Action::make('approve')
+                    ->label('Approve')
+                    ->color('success')
+                    ->icon('heroicon-o-check-circle')
                     ->requiresConfirmation()
-
-                    ->action(function (
-                        $record
-                    ) {
+                    ->form([
+                        Textarea::make('catatan')
+                            ->label('Catatan (opsional)')
+                            ->rows(3),
+                    ])
+                    ->action(function (array $data, $record) {
 
                         $record->update([
-
-                            'status' =>
-                                'pembayaran',
-
-                            'tanggal_verifikasi' =>
-                                now(),
+                            'status'              => 'approve',
+                            'catatan'             => $data['catatan'] ?? null,
+                            'tanggal_verifikasi'  => now(),
                         ]);
 
                         /*
                         |--------------------------------------------------------------------------
-                        | UPDATE STATUS PENGAJUAN
+                        | UPDATE STATUS PENGAJUAN → siap direalisasi admin
                         |--------------------------------------------------------------------------
                         */
 
-                        if (
-                            $record->pengajuan
-                        ) {
-
+                        if ($record->pengajuan) {
                             $record->pengajuan->update([
-
-                                'status' =>
-                                    'Pembayaran'
+                                'status' => 'Disetujui'
                             ]);
                         }
                     }),
 
                 /*
                 |--------------------------------------------------------------------------
-                | TOLAK
+                | REJECT
                 |--------------------------------------------------------------------------
                 */
 
-                Tables\Actions\Action::make(
-                    'tolak'
-                )
-
-                    ->label(
-                        'Tolak'
-                    )
-
-                    ->color(
-                        'danger'
-                    )
-
-                    ->icon(
-                        'heroicon-o-x-circle'
-                    )
-
+                Tables\Actions\Action::make('reject')
+                    ->label('Tolak')
+                    ->color('danger')
+                    ->icon('heroicon-o-x-circle')
                     ->requiresConfirmation()
-
                     ->form([
-
-                        Textarea::make(
-                            'catatan_verifikasi'
-                        )
-
-                            ->label(
-                                'Alasan Penolakan'
-                            )
-
+                        Textarea::make('alasan_reject')
+                            ->label('Alasan Penolakan')
                             ->required(),
                     ])
-
-                    ->action(function (
-                        array $data,
-                        $record
-                    ) {
+                    ->action(function (array $data, $record) {
 
                         $record->update([
-
-                            'status' =>
-                                'ditolak',
-
-                            'catatan_verifikasi' =>
-                                $data[
-                                    'catatan_verifikasi'
-                                ],
-
-                            'tanggal_verifikasi' =>
-                                now(),
+                            'status'              => 'reject',
+                            'alasan_reject'       => $data['alasan_reject'],
+                            'tanggal_verifikasi'  => now(),
                         ]);
+
+                        if ($record->pengajuan) {
+                            $record->pengajuan->update([
+                                'status' => 'Ditolak'
+                            ]);
+                        }
                     }),
             ])
 
             ->bulkActions([
-
                 Tables\Actions\BulkActionGroup::make([
-
                     Tables\Actions\DeleteBulkAction::make(),
-
                 ]),
             ]);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | RELATIONS
-    |--------------------------------------------------------------------------
-    */
-
     public static function getRelations(): array
     {
-        return [
-
-        ];
+        return [];
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | PAGES
-    |--------------------------------------------------------------------------
-    */
 
     public static function getPages(): array
     {
         return [
-
-            'index' =>
-                Pages\ListVerifikasis::route('/'),
-
-            'create' =>
-                Pages\CreateVerifikasi::route('/create'),
-
-            'edit' =>
-                Pages\EditVerifikasi::route('/{record}/edit'),
+            'index'  => Pages\ListVerifikasis::route('/'),
+            'create' => Pages\CreateVerifikasi::route('/create'),
+            'edit'   => Pages\EditVerifikasi::route('/{record}/edit'),
         ];
     }
 }

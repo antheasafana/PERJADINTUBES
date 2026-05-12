@@ -27,25 +27,42 @@ class Pengajuan extends Model
 
     /*
     |--------------------------------------------------------------------------
+    | TIMESTAMP
+    |--------------------------------------------------------------------------
+    */
+
+    public $timestamps = true;
+
+    /*
+    |--------------------------------------------------------------------------
     | MASS ASSIGNMENT
     |--------------------------------------------------------------------------
     */
 
     protected $fillable = [
+
         'id_pegawai',
+
         'jenis_pengajuan',
+
         'id_pengajuan_parent',
+
         'tujuan',
+
         'tgl_berangkat',
+
         'tgl_kembali',
+
         'estimasi_biaya',
+
         'dokumen',
-        'status'
+
+        'status',
     ];
 
     /*
     |--------------------------------------------------------------------------
-    | RELATION PEGAWAI
+    | RELASI PEGAWAI
     |--------------------------------------------------------------------------
     */
 
@@ -60,7 +77,7 @@ class Pengajuan extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | RELATION JENIS TRANSAKSI
+    | RELASI JENIS TRANSAKSI
     |--------------------------------------------------------------------------
     */
 
@@ -75,7 +92,7 @@ class Pengajuan extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | RELATION REALISASI DANA
+    | RELASI REALISASI DANA
     |--------------------------------------------------------------------------
     */
 
@@ -90,7 +107,7 @@ class Pengajuan extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | RELATION TRANSAKSI PENGELUARAN
+    | RELASI TRANSAKSI PENGELUARAN
     |--------------------------------------------------------------------------
     */
 
@@ -105,7 +122,7 @@ class Pengajuan extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | RELATION VERIFIKASI
+    | RELASI VERIFIKASI
     |--------------------------------------------------------------------------
     */
 
@@ -120,7 +137,7 @@ class Pengajuan extends Model
 
     /*
     |--------------------------------------------------------------------------
-    | RELATION DETAIL BIAYA
+    | RELASI DETAIL BIAYA
     |--------------------------------------------------------------------------
     */
 
@@ -128,6 +145,21 @@ class Pengajuan extends Model
     {
         return $this->hasMany(
             DetailBiaya::class,
+            'id_pengajuan',
+            'id_pengajuan'
+        );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | RELASI PEMBAYARAN
+    |--------------------------------------------------------------------------
+    */
+
+    public function pembayaran()
+    {
+        return $this->hasMany(
+            Pembayaran::class,
             'id_pengajuan',
             'id_pengajuan'
         );
@@ -161,5 +193,35 @@ class Pengajuan extends Model
             'id_pengajuan_parent',
             'id_pengajuan'
         );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | TOTAL PENGELUARAN
+    |--------------------------------------------------------------------------
+    */
+
+    public function getTotalPengeluaranAttribute()
+    {
+        return $this->transaksiPengeluaran
+            ->sum('nominal');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | SISA DANA
+    |--------------------------------------------------------------------------
+    */
+
+    public function getSisaDanaAttribute()
+    {
+        $realisasi =
+            $this->realisasiDana->total_realisasi ?? 0;
+
+        $pengeluaran =
+            $this->transaksiPengeluaran
+                ->sum('nominal');
+
+        return $realisasi - $pengeluaran;
     }
 }

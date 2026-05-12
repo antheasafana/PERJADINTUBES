@@ -8,17 +8,14 @@ use App\Models\akun;
 use App\Models\KategoriBiaya;
 use App\Models\Pengajuan;
 use App\Models\TransaksiPengeluaran;
-use App\Models\Pembayaran;
+use App\Models\Verifikasi;
 
 class TransaksiPengeluaranController extends Controller
 {
     /*
     |--------------------------------------------------------------------------
-    | INDEX
+    | INDEX PEGAWAI
     |--------------------------------------------------------------------------
-    | Menampilkan:
-    | 1. Pengajuan yang sudah direalisasi dana
-    | 2. Daftar transaksi pengeluaran
     */
 
     public function index()
@@ -52,7 +49,6 @@ class TransaksiPengeluaranController extends Controller
     |--------------------------------------------------------------------------
     | CREATE
     |--------------------------------------------------------------------------
-    | Form input pengeluaran
     */
 
     public function create($id_pengajuan)
@@ -65,7 +61,7 @@ class TransaksiPengeluaranController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | VALIDASI REALISASI DANA
+        | VALIDASI REALISASI
         |--------------------------------------------------------------------------
         */
 
@@ -76,6 +72,25 @@ class TransaksiPengeluaranController extends Controller
                 ->with(
                     'error',
                     'Pengajuan belum direalisasi dana.'
+                );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | VALIDASI STATUS
+        |--------------------------------------------------------------------------
+        */
+
+        if (
+            $pengajuan->status ==
+            'Transaksi Tercatat'
+        ) {
+
+            return redirect()
+                ->route('pengeluaran.index')
+                ->with(
+                    'error',
+                    'Pengajuan sudah selesai.'
                 );
         }
 
@@ -103,15 +118,14 @@ class TransaksiPengeluaranController extends Controller
     |--------------------------------------------------------------------------
     | STORE
     |--------------------------------------------------------------------------
-    | Pegawai input pengeluaran
-    | Otomatis masuk verifikasi admin
     */
 
     public function store(Request $request, $id_pengajuan)
     {
-        $pengajuan = Pengajuan::with(
-                'realisasiDana'
-            )
+        $pengajuan = Pengajuan::with([
+                'realisasiDana',
+                'transaksiPengeluaran'
+            ])
             ->findOrFail($id_pengajuan);
 
         /*
@@ -144,6 +158,18 @@ class TransaksiPengeluaranController extends Controller
             'id_kategori' =>
                 'required|array',
 
+            /*
+            |--------------------------------------------------------------------------
+            | PENTING
+            |--------------------------------------------------------------------------
+            | GANTI nama tabel sesuai database asli
+            | Kalau tabel kamu "KategoriBiaya"
+            | maka gunakan:
+            |
+            | exists:KategoriBiaya,id_kategori
+            |--------------------------------------------------------------------------
+            */
+
             'id_kategori.*' =>
                 'required|exists:KategoriBiaya,id_kategori',
 
@@ -157,7 +183,7 @@ class TransaksiPengeluaranController extends Controller
                 'required|array',
 
             'uraian.*' =>
-                'required|string|max:255',
+                'required|string|min:3|max:255',
 
             'nominal' =>
                 'required|array',
@@ -174,7 +200,35 @@ class TransaksiPengeluaranController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | SIMPAN PENGELUARAN
+        | VALIDASI TOTAL
+        |--------------------------------------------------------------------------
+        */
+
+        $totalInput = array_sum($request->nominal);
+
+        $totalRealisasi =
+            $pengajuan->realisasiDana->total_realisasi;
+
+        $totalSebelumnya =
+            $pengajuan->transaksiPengeluaran
+                ->sum('nominal');
+
+        $sisaDana =
+            $totalRealisasi - $totalSebelumnya;
+
+        if ($totalInput > $sisaDana) {
+
+            return back()
+                ->withInput()
+                ->with(
+                    'error',
+                    'Total pengeluaran melebihi sisa realisasi dana.'
+                );
+        }
+
+        /*
+        |--------------------------------------------------------------------------
+        | SIMPAN TRANSAKSI
         |--------------------------------------------------------------------------
         */
 
@@ -184,7 +238,7 @@ class TransaksiPengeluaranController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | UPLOAD FILE
+            | UPLOAD BUKTI
             |--------------------------------------------------------------------------
             */
 
@@ -206,11 +260,11 @@ class TransaksiPengeluaranController extends Controller
 
             /*
             |--------------------------------------------------------------------------
-            | CREATE TRANSAKSI
+            | CREATE PENGELUARAN
             |--------------------------------------------------------------------------
             */
 
-            TransaksiPengeluaran::create([
+            $pengeluaran = TransaksiPengeluaran::create([
 
                 'id_pengajuan' =>
                     $pengajuan->id_pengajuan,
@@ -236,12 +290,6 @@ class TransaksiPengeluaranController extends Controller
                 'bukti' =>
                     $bukti,
 
-                /*
-                |--------------------------------------------------------------------------
-                | STATUS AWAL
-                |--------------------------------------------------------------------------
-                */
-
                 'status' =>
                     'verifikasi_pengeluaran',
 
@@ -257,11 +305,44 @@ class TransaksiPengeluaranController extends Controller
                 'tanggal_tercatat' =>
                     null,
             ]);
+
+            /*
+            |--------------------------------------------------------------------------
+            | CREATE VERIFIKASI
+            |--------------------------------------------------------------------------
+            */
+
+            Verifikasi::create([
+
+                'id_pengajuan' =>
+                    $pengajuan->id_pengajuan,
+
+                'id_transaksi_pengeluaran' =>
+                    $pengeluaran->id_transaksi_pengeluaran,
+
+                'admin_id' =>
+                    1,
+
+                'level' =>
+                    1,
+
+                'status' =>
+                    'pending',
+
+                'catatan' =>
+                    null,
+
+                'alasan_reject' =>
+                    null,
+
+                'tanggal_verifikasi' =>
+                    null,
+            ]);
         }
 
         /*
         |--------------------------------------------------------------------------
-        | UPDATE STATUS PENGAJUAN
+        | UPDATE STATUS
         |--------------------------------------------------------------------------
         */
 
@@ -281,9 +362,8 @@ class TransaksiPengeluaranController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | SHOW
+    | SHOW PEGAWAI
     |--------------------------------------------------------------------------
-    | Detail transaksi pengeluaran
     */
 
     public function show($id)
@@ -303,227 +383,23 @@ class TransaksiPengeluaranController extends Controller
 
     /*
     |--------------------------------------------------------------------------
-    | VERIFIKASI
+    | SHOW ADMIN
     |--------------------------------------------------------------------------
-    | POV ADMIN
-    | Admin verifikasi pengeluaran
     */
 
-    public function verifikasi(
-        Request $request,
-        $id
-    ) {
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDASI
-        |--------------------------------------------------------------------------
-        */
-
-        $request->validate([
-
-            'aksi' =>
-                'required|in:setuju,tolak',
-
-            'catatan_verifikasi' =>
-                'nullable|string',
-        ]);
-
-        $pengeluaran =
-            TransaksiPengeluaran::findOrFail($id);
-
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDASI STATUS
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            $pengeluaran->status !=
-            'verifikasi_pengeluaran'
-        ) {
-
-            return back()->with(
-                'error',
-                'Pengeluaran tidak dalam tahap verifikasi.'
-            );
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | JIKA DITOLAK
-        |--------------------------------------------------------------------------
-        */
-
-        if ($request->aksi === 'tolak') {
-
-            $pengeluaran->update([
-
-                'status' =>
-                    'ditolak',
-
-                'catatan_verifikasi' =>
-                    $request->catatan_verifikasi,
-
-                'tanggal_verifikasi' =>
-                    now(),
-            ]);
-
-            return redirect()
-                ->route(
-                    'pengeluaran.show',
-                    $pengeluaran->id_transaksi_pengeluaran
-                )
-                ->with(
-                    'success',
-                    'Pengeluaran berhasil ditolak.'
-                );
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | JIKA DISETUJUI
-        |--------------------------------------------------------------------------
-        */
-
-        $pengeluaran->update([
-
-            'status' =>
-                'pembayaran',
-
-            'catatan_verifikasi' =>
-                $request->catatan_verifikasi,
-
-            'tanggal_verifikasi' =>
-                now(),
-        ]);
-
-        /*
-        |--------------------------------------------------------------------------
-        | UPDATE STATUS PENGAJUAN
-        |--------------------------------------------------------------------------
-        */
-
-        $pengeluaran->pengajuan->update([
-
-            'status' =>
-                'Pembayaran'
-        ]);
-
-        return redirect()
-            ->route(
-                'pengeluaran.show',
-                $pengeluaran->id_transaksi_pengeluaran
-            )
-            ->with(
-                'success',
-                'Pengeluaran berhasil diverifikasi admin dan masuk tahap pembayaran.'
-            );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | PEMBAYARAN
-    |--------------------------------------------------------------------------
-    | POV ADMIN
-    | Admin melakukan pembayaran
-    */
-
-    public function pembayaran($id)
+    public function showAdmin($id)
     {
-        $pengeluaran =
-            TransaksiPengeluaran::with('pengajuan')
+        $pengeluaran = TransaksiPengeluaran::with([
+                'pengajuan.pegawai',
+                'kategoriBiaya',
+                'akun',
+                'pembayaran'
+            ])
             ->findOrFail($id);
 
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDASI STATUS
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            $pengeluaran->status !=
-            'pembayaran'
-        ) {
-
-            return redirect()
-                ->route(
-                    'pengeluaran.show',
-                    $pengeluaran->id_transaksi_pengeluaran
-                )
-                ->with(
-                    'error',
-                    'Transaksi belum masuk tahap pembayaran.'
-                );
-        }
-
-        /*
-        |--------------------------------------------------------------------------
-        | SIMPAN KE TABEL PEMBAYARAN
-        |--------------------------------------------------------------------------
-        */
-
-        Pembayaran::create([
-
-            'id_pengajuan' =>
-                $pengeluaran->id_pengajuan,
-
-            'id_transaksi_pengeluaran' =>
-                $pengeluaran->id_transaksi_pengeluaran,
-
-            'jenis_pembayaran' =>
-                'reimbursement',
-
-            'arah_transaksi' =>
-                'admin_ke_pegawai',
-
-            'nominal' =>
-                $pengeluaran->nominal,
-
-            'status' =>
-                'dibayar',
-
-            'tanggal_pembayaran' =>
-                now(),
-        ]);
-
-        /*
-        |--------------------------------------------------------------------------
-        | UPDATE STATUS TRANSAKSI
-        |--------------------------------------------------------------------------
-        */
-
-        $pengeluaran->update([
-
-            'status' =>
-                'transaksi_tercatat',
-
-            'tanggal_pembayaran' =>
-                now(),
-
-            'tanggal_tercatat' =>
-                now(),
-        ]);
-
-        /*
-        |--------------------------------------------------------------------------
-        | UPDATE STATUS PENGAJUAN
-        |--------------------------------------------------------------------------
-        */
-
-        $pengeluaran->pengajuan->update([
-
-            'status' =>
-                'Transaksi Tercatat'
-        ]);
-
-        return redirect()
-            ->route(
-                'pengeluaran.show',
-                $pengeluaran->id_transaksi_pengeluaran
-            )
-            ->with(
-                'success',
-                'Pembayaran berhasil dilakukan admin.'
-            );
+        return view(
+            'admin.pengeluaran.show',
+            compact('pengeluaran')
+        );
     }
 }

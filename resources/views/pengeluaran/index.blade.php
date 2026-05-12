@@ -5,10 +5,18 @@
 @section('content')
 
 <div class="top-card">
-    <h1 class="page-title">Transaksi Pengeluaran</h1>
-    <p class="text-muted mb-0">
-        Pilih pengajuan yang sudah direalisasi dana untuk input pengeluaran.
-    </p>
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+        <div>
+            <h1 class="page-title">Transaksi Pengeluaran</h1>
+            <p class="page-subtitle mb-0">
+                Pilih pengajuan yang sudah direalisasi dana untuk input pengeluaran.
+            </p>
+        </div>
+
+        <a href="{{ route('dashboard') }}" class="btn btn-secondary mb-3">
+            ← Kembali Dashboard
+        </a>
+    </div>
 </div>
 
 <div class="table-card mb-4">
