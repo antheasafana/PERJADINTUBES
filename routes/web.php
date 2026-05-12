@@ -2,49 +2,74 @@
 
 use Illuminate\Support\Facades\Route;
 
-// CONTROLLER
+/*
+|--------------------------------------------------------------------------
+| CONTROLLER
+|--------------------------------------------------------------------------
+*/
+
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\PengajuanController;
 use App\Http\Controllers\TransaksiPengeluaranController;
+use App\Http\Controllers\PembayaranController;
+use App\Http\Controllers\VerifikasiController;
 
-// =======================
-// LOGIN
-// =======================
+/*
+|--------------------------------------------------------------------------
+| LOGIN
+|--------------------------------------------------------------------------
+*/
 
 Route::get('/login', [
     AuthController::class,
     'showLoginForm'
-]);
+])->name('login');
 
 Route::post('/login', [
     AuthController::class,
     'login'
-]);
+])->name('login.process');
 
-// =======================
-// LOGOUT
-// =======================
+/*
+|--------------------------------------------------------------------------
+| LOGOUT
+|--------------------------------------------------------------------------
+*/
 
 Route::post('/logout', [
     AuthController::class,
     'logout'
 ])->name('logout');
 
-// =======================
-// DASHBOARD PEGAWAI
-// =======================
+/*
+|--------------------------------------------------------------------------
+| PEGAWAI
+|--------------------------------------------------------------------------
+*/
 
 Route::middleware('pegawai')
 ->group(function () {
 
-    // DASHBOARD
-    Route::get('/dashboard', function () {
-        return view('pengajuan.dashboard');
-    })->name('dashboard'); // ← TAMBAHAN NAMA ROUTE
+    /*
+    |--------------------------------------------------------------------------
+    | DASHBOARD
+    |--------------------------------------------------------------------------
+    */
 
-    // =======================
-    // PENGAJUAN
-    // =======================
+    Route::get('/dashboard', [
+        PengajuanController::class,
+        'dashboard'
+    ])->name('dashboard');
+
+    Route::get('/pegawai', function () {
+        return redirect()->route('dashboard');
+    })->name('pegawai.dashboard');
+
+    /*
+    |--------------------------------------------------------------------------
+    | PENGAJUAN
+    |--------------------------------------------------------------------------
+    */
 
     Route::get('/pengajuan', [
         PengajuanController::class,
@@ -76,34 +101,123 @@ Route::middleware('pegawai')
         'update'
     ])->name('pengajuan.update');
 
+    /*
+    |--------------------------------------------------------------------------
+    | PENGELUARAN
+    |--------------------------------------------------------------------------
+    */
+
     Route::get('/pengeluaran', [
-    TransaksiPengeluaranController::class,
-    'index'
-])->name('pengeluaran.index');
+        TransaksiPengeluaranController::class,
+        'index'
+    ])->name('pengeluaran.index');
 
-Route::get('/pengeluaran/create/{id_pengajuan}', [
-    TransaksiPengeluaranController::class,
-    'create'
-])->name('pengeluaran.create');
+    Route::get('/pengeluaran/create/{id_pengajuan}', [
+        TransaksiPengeluaranController::class,
+        'create'
+    ])->name('pengeluaran.create');
 
-Route::post('/pengeluaran/store/{id_pengajuan}', [
-    TransaksiPengeluaranController::class,
-    'store'
-])->name('pengeluaran.store');
+    Route::post('/pengeluaran/store/{id_pengajuan}', [
+        TransaksiPengeluaranController::class,
+        'store'
+    ])->name('pengeluaran.store');
 
-Route::get('/pengeluaran/{id}', [
-    TransaksiPengeluaranController::class,
-    'show'
-])->name('pengeluaran.show');
+    Route::get('/pengeluaran/{id}', [
+        TransaksiPengeluaranController::class,
+        'show'
+    ])->name('pengeluaran.show');
 
-Route::post('/pengeluaran/{id}/verifikasi', [
-    TransaksiPengeluaranController::class,
-    'verifikasi'
-])->name('pengeluaran.verifikasi');
+    /*
+    |--------------------------------------------------------------------------
+    | PEMBAYARAN PEGAWAI
+    |--------------------------------------------------------------------------
+    */
 
-Route::post('/pengeluaran/{id}/pembayaran', [
-    TransaksiPengeluaranController::class,
-    'pembayaran'
-])->name('pengeluaran.pembayaran');
+    Route::get('/pembayaran', [
+        PembayaranController::class,
+        'index'
+    ])->name('pembayaran.index');
+
+});
+
+/*
+|--------------------------------------------------------------------------
+| ADMIN
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware('admin')
+->prefix('admin')
+->group(function () {
+
+    /*
+    |--------------------------------------------------------------------------
+    | VERIFIKASI PENGAJUAN
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/verifikasi', [
+        VerifikasiController::class,
+        'index'
+    ])->name('verifikasi.index');
+
+    Route::get('/verifikasi/{id}', [
+        VerifikasiController::class,
+        'show'
+    ])->name('verifikasi.show');
+
+    Route::post('/verifikasi/{id}/approve', [
+        VerifikasiController::class,
+        'approve'
+    ])->name('verifikasi.approve');
+
+    Route::post('/verifikasi/{id}/reject', [
+        VerifikasiController::class,
+        'reject'
+    ])->name('verifikasi.reject');
+
+    /*
+    |--------------------------------------------------------------------------
+    | VERIFIKASI PENGELUARAN
+    |--------------------------------------------------------------------------
+    |
+    | Unified verification now uses VerifikasiController.
+    |
+    */
+
+    /*
+    |--------------------------------------------------------------------------
+    | DETAIL PENGELUARAN
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/pengeluaran/{id}', [
+        TransaksiPengeluaranController::class,
+        'showAdmin'
+    ])->name('admin.pengeluaran.show');
+
+    /*
+    |--------------------------------------------------------------------------
+    | APPROVE / REJECT PENGELUARAN
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post('/pengeluaran/{id}/verifikasi', [
+        TransaksiPengeluaranController::class,
+        'verifikasi'
+    ])->name('pengeluaran.verifikasi');
+
+    /*
+    |--------------------------------------------------------------------------
+    | PEMBAYARAN
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post('/pengeluaran/{id}/pembayaran', [
+        TransaksiPengeluaranController::class,
+        'pembayaran'
+    ])->name('pengeluaran.pembayaran');
+
+    
 
 });

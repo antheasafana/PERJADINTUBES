@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>@yield('title', 'E-Perjadin')</title>
+    <title>@yield('title', 'Admin E-Perjadin')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     {{-- BOOTSTRAP CDN --}}
@@ -28,7 +28,6 @@
             min-height: 100vh;
         }
 
-        /* SIDEBAR */
         .sidebar {
             width: 245px;
             min-height: 100vh;
@@ -92,48 +91,32 @@
             color: #24674b;
         }
 
-        /* CONTENT */
         .content {
             margin-left: 245px;
             width: calc(100% - 245px);
             padding: 36px 50px;
         }
 
-        /* CARD */
-        .top-card {
-            background: white;
-            border-radius: 26px;
-            padding: 34px;
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.05);
-            margin-bottom: 25px;
-        }
-
-        .table-card {
-            background: white;
-            border-radius: 22px;
-            padding: 25px;
-            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.05);
-            margin-bottom: 25px;
-        }
-
+        .top-card,
+        .table-card,
         .stat-card {
             background: white;
             border-radius: 22px;
-            padding: 25px;
             box-shadow: 0 10px 28px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+        }
+
+        .top-card {
+            padding: 34px;
+        }
+
+        .table-card {
+            padding: 25px;
+        }
+
+        .stat-card {
+            padding: 25px;
             height: 100%;
-        }
-
-        .stat-card h5 {
-            color: #6c757d;
-            font-size: 15px;
-            margin-bottom: 10px;
-        }
-
-        .stat-card h2 {
-            color: #155F52;
-            font-weight: 700;
-            margin-bottom: 0;
         }
 
         .page-title {
@@ -147,7 +130,6 @@
             margin-bottom: 0;
         }
 
-        /* BUTTON */
         .btn-green {
             background: #2E7D5B;
             color: white;
@@ -180,11 +162,6 @@
             color: white;
         }
 
-        /* TABLE */
-        .table {
-            margin-bottom: 0;
-        }
-
         .table thead th {
             font-size: 14px;
             font-weight: 700;
@@ -204,7 +181,6 @@
             background: #f8faf9;
         }
 
-        /* BADGE STATUS */
         .badge-status {
             border-radius: 20px;
             padding: 7px 12px;
@@ -243,7 +219,6 @@
             color: #856404;
         }
 
-        /* FORM */
         .form-control,
         .form-select {
             border-radius: 14px;
@@ -261,7 +236,6 @@
             color: #374151;
         }
 
-        /* ALERT */
         .alert {
             border: none;
             border-radius: 18px;
@@ -269,7 +243,6 @@
             margin-bottom: 20px;
         }
 
-        /* RESPONSIVE */
         @media (max-width: 768px) {
             .app-wrapper {
                 display: block;
@@ -312,31 +285,15 @@
 
 <div class="app-wrapper">
 
-    {{-- SIDEBAR --}}
     <aside class="sidebar">
         <div class="sidebar-logo">
-            E- Perjadin
+            Admin E-Perjadin
         </div>
 
         <nav class="sidebar-menu">
-            <a href="{{ route('dashboard') }}"
-               class="{{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                Dashboard
-            </a>
-
-            <a href="{{ route('pengajuan.index') }}"
-               class="{{ request()->routeIs('pengajuan.index') || request()->routeIs('pengajuan.view') || request()->routeIs('pengajuan.edit') ? 'active' : '' }}">
-                Pengajuan Saya
-            </a>
-
-            <a href="{{ route('pengajuan.create') }}"
-               class="{{ request()->routeIs('pengajuan.create') ? 'active' : '' }}">
-                Buat Pengajuan
-            </a>
-
-            <a href="{{ route('pengeluaran.index') }}"
-               class="{{ request()->routeIs('pengeluaran.*') ? 'active' : '' }}">
-                Transaksi Pengeluaran
+            <a href="{{ route('verifikasi.index') }}"
+               class="{{ request()->routeIs('verifikasi.*') ? 'active' : '' }}">
+                Verifikasi
             </a>
         </nav>
 
@@ -350,7 +307,6 @@
         </div>
     </aside>
 
-    {{-- CONTENT --}}
     <main class="content">
 
         @if(session('success'))

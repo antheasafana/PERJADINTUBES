@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources;
 
-use App\Models\TransaksiPengeluaran;
+use App\Models\Pembayaran;
 
 use App\Filament\Resources\PembayaranResource\Pages;
 
@@ -22,7 +22,7 @@ class PembayaranResource extends Resource
     */
 
     protected static ?string $model =
-        TransaksiPengeluaran::class;
+        Pembayaran::class;
 
     /*
     |--------------------------------------------------------------------------
@@ -74,111 +74,39 @@ class PembayaranResource extends Resource
             */
 
             ->query(
-
-                TransaksiPengeluaran::query()
-
-                    ->where(
-                        'status',
-                        'pembayaran'
-                    )
+                Pembayaran::query()
             )
 
             ->columns([
-
-                /*
-                |--------------------------------------------------------------------------
-                | ID PENGAJUAN
-                |--------------------------------------------------------------------------
-                */
-
-                TextColumn::make(
-                    'pengajuan.id_pengajuan'
-                )
-
-                    ->label(
-                        'ID Pengajuan'
-                    )
-
+                TextColumn::make('id_pembayaran')
+                    ->label('ID Pembayaran')
                     ->searchable(),
 
-                /*
-                |--------------------------------------------------------------------------
-                | JENIS PENGELUARAN
-                |--------------------------------------------------------------------------
-                */
+                TextColumn::make('pengajuan.id_pengajuan')
+                    ->label('ID Pengajuan')
+                    ->searchable(),
 
-                TextColumn::make(
-                    'jenis_pengeluaran'
-                )
-
-                    ->label(
-                        'Jenis'
-                    )
-
+                TextColumn::make('jenis_pembayaran')
+                    ->label('Jenis Pembayaran')
                     ->badge(),
 
-                /*
-                |--------------------------------------------------------------------------
-                | URAIAN
-                |--------------------------------------------------------------------------
-                */
-
-                TextColumn::make(
-                    'uraian'
-                )
-
+                TextColumn::make('transaksiPengeluaran.uraian')
+                    ->label('Uraian')
                     ->limit(40)
-
                     ->searchable(),
 
-                /*
-                |--------------------------------------------------------------------------
-                | NOMINAL
-                |--------------------------------------------------------------------------
-                */
-
-                TextColumn::make(
-                    'nominal'
-                )
-
+                TextColumn::make('nominal')
+                    ->label('Nominal')
                     ->money('IDR'),
 
-                /*
-                |--------------------------------------------------------------------------
-                | STATUS
-                |--------------------------------------------------------------------------
-                */
-
-                TextColumn::make(
-                    'status'
-                )
-
+                TextColumn::make('status')
                     ->badge()
-
-                    ->color(fn (
-                        string $state
-                    ): string => match ($state) {
-
-                        'pembayaran'
-                            => 'warning',
-
-                        'transaksi_tercatat'
-                            => 'success',
-
-                        default
-                            => 'gray',
+                    ->color(fn (string $state): string => match ($state) {
+                        'dibayar' => 'success',
+                        default => 'gray',
                     }),
 
-                /*
-                |--------------------------------------------------------------------------
-                | TANGGAL VERIFIKASI
-                |--------------------------------------------------------------------------
-                */
-
-                TextColumn::make(
-                    'tanggal_verifikasi'
-                )
-
+                TextColumn::make('tanggal_pembayaran')
                     ->dateTime(),
             ])
 
@@ -186,72 +114,7 @@ class PembayaranResource extends Resource
 
             ])
 
-            ->actions([
-
-                /*
-                |--------------------------------------------------------------------------
-                | TOMBOL BAYAR
-                |--------------------------------------------------------------------------
-                */
-
-                Tables\Actions\Action::make(
-                    'bayar'
-                )
-
-                    ->label(
-                        'Bayar'
-                    )
-
-                    ->color(
-                        'success'
-                    )
-
-                    ->icon(
-                        'heroicon-o-banknotes'
-                    )
-
-                    ->requiresConfirmation()
-
-                    ->action(function (
-                        $record
-                    ) {
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | UPDATE STATUS
-                        |--------------------------------------------------------------------------
-                        */
-
-                        $record->update([
-
-                            'status' =>
-                                'transaksi_tercatat',
-
-                            'tanggal_pembayaran' =>
-                                now(),
-
-                            'tanggal_tercatat' =>
-                                now(),
-                        ]);
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | UPDATE STATUS PENGAJUAN
-                        |--------------------------------------------------------------------------
-                        */
-
-                        if (
-                            $record->pengajuan
-                        ) {
-
-                            $record->pengajuan->update([
-
-                                'status' =>
-                                    'Transaksi Tercatat'
-                            ]);
-                        }
-                    }),
-            ])
+            ->actions([])
 
             ->bulkActions([
 

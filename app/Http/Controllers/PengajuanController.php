@@ -4,14 +4,42 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Pengajuan;
-use App\Models\Verifikasi;
 use App\Models\RealisasiDana;
+use App\Models\TransaksiPengeluaran;
+use App\Models\Verifikasi;
 
 class PengajuanController extends Controller
 {
     public function dashboard()
     {
-        return view('pengajuan.dashboard');
+        $pengajuanRealisasi = Pengajuan::with([
+                'realisasiDana',
+                'transaksiPengeluaran'
+            ])
+            ->whereHas('realisasiDana')
+            ->latest()
+            ->get();
+
+        $pengeluaranTerbaru = $this->getLatestPengeluaran();
+
+        $totalPengajuanRealisasi = $pengajuanRealisasi->count();
+
+        $totalPengeluaran = TransaksiPengeluaran::sum('nominal');
+
+        return view('pengajuan.dashboard', compact(
+            'pengajuanRealisasi',
+            'pengeluaranTerbaru',
+            'totalPengajuanRealisasi',
+            'totalPengeluaran'
+        ));
+    }
+
+    private function getLatestPengeluaran()
+    {
+        return TransaksiPengeluaran::with('pengajuan')
+            ->latest()
+            ->limit(5)
+            ->get();
     }
 
     public function index()

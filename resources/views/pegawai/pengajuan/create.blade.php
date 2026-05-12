@@ -101,6 +101,10 @@
 </head>
 <body>
 
+<a href="{{ route('dashboard') }}" class="btn btn-secondary mb-3">
+    ← Kembali Dashboard
+</a>
+
 <div class="wizard-container">
 
     <div class="wizard-card">
