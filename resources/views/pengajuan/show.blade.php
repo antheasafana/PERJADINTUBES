@@ -3,6 +3,7 @@
 @section('title', 'Detail Pengajuan')
 
 @push('styles')
+<style>
     .page-title {
         font-size: 2.5rem;
         font-weight: 700;
@@ -55,21 +56,26 @@
         padding: 18px;
         margin-bottom: 15px;
     }
+</style>
 @endpush
 
 @section('content')
 
 <div class="container py-5">
+
     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
         <div>
             <h1 class="page-title">📄 Detail Pengajuan</h1>
-            <p class="text-muted mb-0">Lihat detail, status, dan dokumen pengajuan Anda.</p>
+            <p class="text-muted mb-0">
+                Lihat detail, status, dan dokumen pengajuan Anda.
+            </p>
         </div>
 
         <div class="d-flex flex-wrap gap-2">
             <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-kembali">
                 ← Kembali Dashboard
             </a>
+
             <a href="{{ route('pengajuan.index') }}" class="btn btn-kembali">
                 Kembali Pengajuan Saya
             </a>
@@ -99,72 +105,138 @@
         };
     @endphp
 
-    <div class="status-box" style="background: {{ $statusConfig['bg'] }}; border: 2px solid {{ $statusConfig['border'] }};">
-        <h5 class="fw-bold mb-2">{{ $statusConfig['title'] }}</h5>
-        <p class="mb-0 text-muted">{{ $statusConfig['text'] }}</p>
+    <div class="status-box"
+         style="background: {{ $statusConfig['bg'] }};
+                border: 2px solid {{ $statusConfig['border'] }};">
+
+        <h5 class="fw-bold mb-2">
+            {{ $statusConfig['title'] }}
+        </h5>
+
+        <p class="mb-0 text-muted">
+            {{ $statusConfig['text'] }}
+        </p>
     </div>
 
     <div class="card card-custom">
+
         <div class="card-header">
-            <h3 class="mb-0">📋 Data Pengajuan #{{ $pengajuan->id_pengajuan }}</h3>
+            <h3 class="mb-0">
+                📋 Data Pengajuan #{{ $pengajuan->id_pengajuan }}
+            </h3>
         </div>
 
         <div class="card-body p-4">
+
             <div class="row g-4">
+
                 <div class="col-md-6">
-                    <div class="text-muted small mb-1">Jenis Pengajuan</div>
+                    <div class="text-muted small mb-1">
+                        Jenis Pengajuan
+                    </div>
+
                     @if($pengajuan->jenis_pengajuan == 'UANG_MUKA')
-                        <span class="badge bg-primary badge-custom">Uang Muka</span>
+                        <span class="badge bg-primary badge-custom">
+                            Uang Muka
+                        </span>
                     @else
-                        <span class="badge bg-warning text-dark badge-custom">Reimbursement</span>
+                        <span class="badge bg-warning text-dark badge-custom">
+                            Reimbursement
+                        </span>
                     @endif
                 </div>
+
                 <div class="col-md-6">
-                    <div class="text-muted small mb-1">Tujuan Perjalanan</div>
-                    <div class="fw-semibold">{{ $pengajuan->tujuan }}</div>
-                </div>
-                <div class="col-md-6">
-                    <div class="text-muted small mb-1">Tanggal Berangkat</div>
-                    <div class="fw-semibold">{{ \Carbon\Carbon::parse($pengajuan->tgl_berangkat)->format('d M Y') }}</div>
-                </div>
-                <div class="col-md-6">
-                    <div class="text-muted small mb-1">Tanggal Kembali</div>
-                    <div class="fw-semibold">{{ \Carbon\Carbon::parse($pengajuan->tgl_kembali)->format('d M Y') }}</div>
-                </div>
-                @if($pengajuan->estimasi_biaya)
-                    <div class="col-md-6">
-                        <div class="text-muted small mb-1">Estimasi Biaya</div>
-                        <div class="fw-semibold text-success">Rp {{ number_format($pengajuan->estimasi_biaya, 0, ',', '.') }}</div>
+                    <div class="text-muted small mb-1">
+                        Tujuan Perjalanan
                     </div>
-                @endif
-                <div class="col-md-6">
-                    <div class="text-muted small mb-1">Tanggal Dibuat</div>
-                    <div class="fw-semibold">{{ $pengajuan->created_at->format('d M Y, H:i') }} WIB</div>
+
+                    <div class="fw-semibold">
+                        {{ $pengajuan->tujuan }}
+                    </div>
                 </div>
+
+                <div class="col-md-6">
+                    <div class="text-muted small mb-1">
+                        Tanggal Berangkat
+                    </div>
+
+                    <div class="fw-semibold">
+                        {{ \Carbon\Carbon::parse($pengajuan->tgl_berangkat)->format('d M Y') }}
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="text-muted small mb-1">
+                        Tanggal Kembali
+                    </div>
+
+                    <div class="fw-semibold">
+                        {{ \Carbon\Carbon::parse($pengajuan->tgl_kembali)->format('d M Y') }}
+                    </div>
+                </div>
+
+                @if($pengajuan->estimasi_biaya)
+                <div class="col-md-6">
+                    <div class="text-muted small mb-1">
+                        Estimasi Biaya
+                    </div>
+
+                    <div class="fw-semibold text-success">
+                        Rp {{ number_format($pengajuan->estimasi_biaya, 0, ',', '.') }}
+                    </div>
+                </div>
+                @endif
+
+                <div class="col-md-6">
+                    <div class="text-muted small mb-1">
+                        Tanggal Dibuat
+                    </div>
+
+                    <div class="fw-semibold">
+                        {{ $pengajuan->created_at->format('d M Y, H:i') }} WIB
+                    </div>
+                </div>
+
             </div>
 
             <hr class="my-5">
 
-            <h4 class="fw-bold mb-4">📎 Dokumen Terlampir</h4>
+            <h4 class="fw-bold mb-4">
+                📎 Dokumen Terlampir
+            </h4>
 
-            @php
-                $dokumen = $pengajuan->dokumen ?? [];
-                if (is_string($dokumen)) {
-                    $dokumen = json_decode($dokumen, true);
-                }
-            @endphp
+            {{-- FIX BAGIAN DOKUMEN --}}
+            @if($pengajuan->dokumen)
 
-            @if(!empty($dokumen['file']))
                 <div class="dokumen-box d-flex justify-content-between align-items-center">
+
                     <div>
-                        <h6 class="fw-bold mb-1">File Pengajuan</h6>
-                        <small class="text-muted">{{ $dokumen['file'] }}</small>
+                        <h6 class="fw-bold mb-1">
+                            File Pengajuan
+                        </h6>
+
+                        <small class="text-muted">
+                            {{ $pengajuan->dokumen }}
+                        </small>
                     </div>
-                    <a href="{{ asset('dokumen/' . $dokumen['file']) }}" target="_blank" class="btn btn-primary btn-lihat">Lihat</a>
+
+                    <a href="{{ asset('dokumen/' . $pengajuan->dokumen) }}"
+                       target="_blank"
+                       class="btn btn-primary">
+                        Lihat Dokumen
+                    </a>
+
                 </div>
+
             @else
-                <p class="text-muted">Tidak ada dokumen terlampir.</p>
+
+                <p class="text-muted">
+                    Tidak ada dokumen terlampir.
+                </p>
+
             @endif
+
         </div>
     </div>
 </div>

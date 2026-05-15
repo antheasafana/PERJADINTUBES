@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Mail;
 
 /*
 |--------------------------------------------------------------------------
@@ -13,6 +14,15 @@ use App\Http\Controllers\PengajuanController;
 use App\Http\Controllers\TransaksiPengeluaranController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\VerifikasiController;
+
+/*
+|--------------------------------------------------------------------------
+| MAIL
+|--------------------------------------------------------------------------
+*/
+
+use App\Mail\TesMail;
+use App\Models\Pengajuan;
 
 /*
 |--------------------------------------------------------------------------
@@ -47,8 +57,7 @@ Route::post('/logout', [
 |--------------------------------------------------------------------------
 */
 
-Route::middleware('pegawai')
-->group(function () {
+Route::middleware('pegawai')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
@@ -147,77 +156,86 @@ Route::middleware('pegawai')
 */
 
 Route::middleware('admin')
-->prefix('admin')
-->group(function () {
+    ->prefix('admin')
+    ->group(function () {
 
-    /*
-    |--------------------------------------------------------------------------
-    | VERIFIKASI PENGAJUAN
-    |--------------------------------------------------------------------------
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | VERIFIKASI PENGAJUAN
+        |--------------------------------------------------------------------------
+        */
 
-    Route::get('/verifikasi', [
-        VerifikasiController::class,
-        'index'
-    ])->name('verifikasi.index');
+        Route::get('/verifikasi', [
+            VerifikasiController::class,
+            'index'
+        ])->name('verifikasi.index');
 
-    Route::get('/verifikasi/{id}', [
-        VerifikasiController::class,
-        'show'
-    ])->name('verifikasi.show');
+        Route::get('/verifikasi/{id}', [
+            VerifikasiController::class,
+            'show'
+        ])->name('verifikasi.show');
 
-    Route::post('/verifikasi/{id}/approve', [
-        VerifikasiController::class,
-        'approve'
-    ])->name('verifikasi.approve');
+        Route::post('/verifikasi/{id}/approve', [
+            VerifikasiController::class,
+            'approve'
+        ])->name('verifikasi.approve');
 
-    Route::post('/verifikasi/{id}/reject', [
-        VerifikasiController::class,
-        'reject'
-    ])->name('verifikasi.reject');
+        Route::post('/verifikasi/{id}/reject', [
+            VerifikasiController::class,
+            'reject'
+        ])->name('verifikasi.reject');
 
-    /*
-    |--------------------------------------------------------------------------
-    | VERIFIKASI PENGELUARAN
-    |--------------------------------------------------------------------------
-    |
-    | Unified verification now uses VerifikasiController.
-    |
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | DETAIL PENGELUARAN
+        |--------------------------------------------------------------------------
+        */
 
-    /*
-    |--------------------------------------------------------------------------
-    | DETAIL PENGELUARAN
-    |--------------------------------------------------------------------------
-    */
+        Route::get('/pengeluaran/{id}', [
+            TransaksiPengeluaranController::class,
+            'showAdmin'
+        ])->name('admin.pengeluaran.show');
 
-    Route::get('/pengeluaran/{id}', [
-        TransaksiPengeluaranController::class,
-        'showAdmin'
-    ])->name('admin.pengeluaran.show');
+        /*
+        |--------------------------------------------------------------------------
+        | APPROVE / REJECT PENGELUARAN
+        |--------------------------------------------------------------------------
+        */
 
-    /*
-    |--------------------------------------------------------------------------
-    | APPROVE / REJECT PENGELUARAN
-    |--------------------------------------------------------------------------
-    */
+        Route::post('/pengeluaran/{id}/verifikasi', [
+            TransaksiPengeluaranController::class,
+            'verifikasi'
+        ])->name('pengeluaran.verifikasi');
 
-    Route::post('/pengeluaran/{id}/verifikasi', [
-        TransaksiPengeluaranController::class,
-        'verifikasi'
-    ])->name('pengeluaran.verifikasi');
+        /*
+        |--------------------------------------------------------------------------
+        | PEMBAYARAN
+        |--------------------------------------------------------------------------
+        */
 
-    /*
-    |--------------------------------------------------------------------------
-    | PEMBAYARAN
-    |--------------------------------------------------------------------------
-    */
+        Route::post('/pengeluaran/{id}/pembayaran', [
+            TransaksiPengeluaranController::class,
+            'pembayaran'
+        ])->name('pengeluaran.pembayaran');
+    });
 
-    Route::post('/pengeluaran/{id}/pembayaran', [
-        TransaksiPengeluaranController::class,
-        'pembayaran'
-    ])->name('pengeluaran.pembayaran');
+/*
+|--------------------------------------------------------------------------
+| TEST EMAIL MAILTRAP
+|--------------------------------------------------------------------------
+*/
 
-    
+Route::get('/tesemail', function () {
 
+    $pengajuan = Pengajuan::latest()->first();
+
+    if (!$pengajuan) {
+        return "Tidak ada data pengajuan untuk testing email.";
+    }
+
+    Mail::to('test@mailtrap.io')->send(
+        new TesMail($pengajuan)
+    );
+
+    return "Email berhasil dikirim ke Mailtrap!";
 });
