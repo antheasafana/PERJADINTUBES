@@ -3,10 +3,16 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+
 use App\Models\Pengajuan;
+use App\Models\Pegawai;
 use App\Models\RealisasiDana;
 use App\Models\TransaksiPengeluaran;
 use App\Models\Verifikasi;
+
+use App\Mail\TesMail;
 
 class PengajuanController extends Controller
 {
@@ -23,7 +29,6 @@ class PengajuanController extends Controller
         $pengeluaranTerbaru = $this->getLatestPengeluaran();
 
         $totalPengajuanRealisasi = $pengajuanRealisasi->count();
-
         $totalPengeluaran = TransaksiPengeluaran::sum('nominal');
 
         return view('pengajuan.dashboard', compact(
@@ -66,7 +71,6 @@ class PengajuanController extends Controller
         | VALIDASI
         |--------------------------------------------------------------------------
         */
-
         $request->validate([
             'jenis_pengajuan' => 'required',
             'tujuan' => 'required',
@@ -81,7 +85,6 @@ class PengajuanController extends Controller
         | UPLOAD FILE
         |--------------------------------------------------------------------------
         */
-
         $fileName = null;
 
         if ($request->hasFile('dokumen')) {
@@ -94,12 +97,23 @@ class PengajuanController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | AMBIL DATA PEGAWAI
+        |--------------------------------------------------------------------------
+        */
+        $pegawai = Pegawai::find(1);
+
+        if (!$pegawai) {
+            return redirect()->back()
+                ->with('error', 'Data pegawai tidak ditemukan');
+        }
+
+        /*
+        |--------------------------------------------------------------------------
         | SIMPAN PENGAJUAN
         |--------------------------------------------------------------------------
         */
-
         $pengajuan = Pengajuan::create([
-            'id_pegawai' => 1,
+            'id_pegawai' => $pegawai->id,
             'jenis_pengajuan' => $request->jenis_pengajuan,
             'id_pengajuan_parent' => null,
             'tujuan' => $request->tujuan,
@@ -112,19 +126,25 @@ class PengajuanController extends Controller
 
         /*
         |--------------------------------------------------------------------------
+        | KIRIM EMAIL OTOMATIS
+        |--------------------------------------------------------------------------
+        */
+        try {
+            if ($pegawai->email) {
+                Mail::to($pegawai->email)
+                    ->send(new TesMail($pengajuan));
+            }
+        } catch (\Exception $e) {
+            Log::error('Email gagal dikirim: ' . $e->getMessage());
+        }
+
+        /*
+        |--------------------------------------------------------------------------
         | FLOW PENGAJUAN
         |--------------------------------------------------------------------------
-        |
-        | UANG_MUKA:
-        | Masuk ke verifikasi dulu.
-        |
-        | REIMBURSEMENT / PENGEMBALIAN:
-        | Langsung dibuat realisasi dana, sehingga tombol Input Pengeluaran
-        | bisa muncul di halaman Pengajuan Saya.
-        |
         */
-
         if ($request->jenis_pengajuan == 'UANG_MUKA') {
+
             Verifikasi::create([
                 'id_pengajuan' => $pengajuan->id_pengajuan,
                 'admin_id' => 1,
@@ -132,7 +152,9 @@ class PengajuanController extends Controller
                 'status' => 'pending',
                 'tanggal_verifikasi' => null,
             ]);
+
         } else {
+
             RealisasiDana::create([
                 'id_pengajuan' => $pengajuan->id_pengajuan,
                 'tgl_realisasi' => now(),
@@ -149,9 +171,8 @@ class PengajuanController extends Controller
         | REDIRECT
         |--------------------------------------------------------------------------
         */
-
         return redirect()->route('pengajuan.index')
-            ->with('success', 'Pengajuan berhasil dikirim!');
+            ->with('success', 'Pengajuan berhasil dikirim & email berhasil dikirim!');
     }
 
     public function show($id)
@@ -160,7 +181,7 @@ class PengajuanController extends Controller
                 'realisasiDana',
                 'transaksiPengeluaran',
                 'verifikasi',
-                'detailBiaya'
+        
             ])
             ->findOrFail($id);
 
@@ -177,12 +198,6 @@ class PengajuanController extends Controller
 
     public function update(Request $request, $id)
     {
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDASI
-        |--------------------------------------------------------------------------
-        */
-
         $request->validate([
             'tujuan' => 'required',
             'tgl_berangkat' => 'required|date',
@@ -191,21 +206,9 @@ class PengajuanController extends Controller
             'dokumen' => 'nullable|file|mimes:pdf,png,jpg,jpeg,doc,docx|max:2048'
         ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | AMBIL DATA
-        |--------------------------------------------------------------------------
-        */
-
         $pengajuan = Pengajuan::findOrFail($id);
 
         $dokumen = $pengajuan->dokumen;
-
-        /*
-        |--------------------------------------------------------------------------
-        | UPLOAD FILE BARU
-        |--------------------------------------------------------------------------
-        */
 
         if ($request->hasFile('dokumen')) {
             $file = $request->file('dokumen');
@@ -217,12 +220,6 @@ class PengajuanController extends Controller
             $dokumen = $fileName;
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | UPDATE DATA
-        |--------------------------------------------------------------------------
-        */
-
         $pengajuan->update([
             'tujuan' => $request->tujuan,
             'tgl_berangkat' => $request->tgl_berangkat,
@@ -230,12 +227,6 @@ class PengajuanController extends Controller
             'estimasi_biaya' => $request->estimasi_biaya,
             'dokumen' => $dokumen,
         ]);
-
-        /*
-        |--------------------------------------------------------------------------
-        | REDIRECT
-        |--------------------------------------------------------------------------
-        */
 
         return redirect()->route('pengajuan.index')
             ->with('success', 'Pengajuan berhasil diperbarui!');
