@@ -334,6 +334,11 @@
                 Buat Pengajuan
             </a>
 
+            <a href="{{ route('realisasi.index') }}"
+               class="{{ request()->routeIs('realisasi.*') || request()->routeIs('pengajuan.realisasi*') ? 'active' : '' }}">
+                Realisasi Dana
+            </a>
+
             <a href="{{ route('pengeluaran.index') }}"
                class="{{ request()->routeIs('pengeluaran.*') ? 'active' : '' }}">
                 Transaksi Pengeluaran

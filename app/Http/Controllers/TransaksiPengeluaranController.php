@@ -20,28 +20,29 @@ class TransaksiPengeluaranController extends Controller
 
     public function index()
     {
-        $pengajuanRealisasi = Pengajuan::with([
+        $pengajuanSiapPengeluaran = Pengajuan::with([
                 'realisasiDana',
-                'transaksiPengeluaran'
+                'transaksiPengeluaran',
             ])
-            ->whereHas('realisasiDana')
+            ->whereIn('jenis_pengajuan', ['REIMBURSEMENT', 'PENGEMBALIAN'])
+            ->whereHas('realisasiDana', function ($query) {
+                $query->where('status', 'TEREALISASI')
+                    ->where('total_realisasi', '>', 0);
+            })
             ->latest()
             ->get();
 
         $pengeluaran = TransaksiPengeluaran::with([
                 'pengajuan',
                 'kategoriBiaya',
-                'akun'
+                'akun',
             ])
             ->latest()
             ->get();
 
         return view(
             'pengeluaran.index',
-            compact(
-                'pengajuanRealisasi',
-                'pengeluaran'
-            )
+            compact('pengajuanSiapPengeluaran', 'pengeluaran')
         );
     }
 
@@ -65,33 +66,25 @@ class TransaksiPengeluaranController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        if (!$pengajuan->realisasiDana) {
-
+        if (! $pengajuan->realisasiDana) {
             return redirect()
-                ->route('pengeluaran.index')
-                ->with(
-                    'error',
-                    'Pengajuan belum direalisasi dana.'
-                );
+                ->route('realisasi.index')
+                ->with('error', 'Silakan input realisasi dana terlebih dahulu.');
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDASI STATUS
-        |--------------------------------------------------------------------------
-        */
-
         if (
-            $pengajuan->status ==
-            'Transaksi Tercatat'
+            $pengajuan->realisasiDana->status !== 'TEREALISASI'
+            || $pengajuan->realisasiDana->total_realisasi <= 0
         ) {
+            return redirect()
+                ->route('pengajuan.realisasi', $id_pengajuan)
+                ->with('error', 'Silakan lengkapi realisasi dana sebelum input pengeluaran.');
+        }
 
+        if ($pengajuan->status == 'Transaksi Tercatat') {
             return redirect()
                 ->route('pengeluaran.index')
-                ->with(
-                    'error',
-                    'Pengajuan sudah selesai.'
-                );
+                ->with('error', 'Pengajuan sudah selesai.');
         }
 
         $kategori = KategoriBiaya::orderBy(
@@ -134,21 +127,20 @@ class TransaksiPengeluaranController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        if (!$pengajuan->realisasiDana) {
-
+        if (! $pengajuan->realisasiDana) {
             return redirect()
-                ->route('pengeluaran.index')
-                ->with(
-                    'error',
-                    'Pengajuan belum direalisasi dana.'
-                );
+                ->route('realisasi.index')
+                ->with('error', 'Silakan input realisasi dana terlebih dahulu.');
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | VALIDASI INPUT
-        |--------------------------------------------------------------------------
-        */
+        if (
+            $pengajuan->realisasiDana->status !== 'TEREALISASI'
+            || $pengajuan->realisasiDana->total_realisasi <= 0
+        ) {
+            return redirect()
+                ->route('pengajuan.realisasi', $id_pengajuan)
+                ->with('error', 'Silakan lengkapi realisasi dana sebelum input pengeluaran.');
+        }
 
         $request->validate([
 

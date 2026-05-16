@@ -4,25 +4,32 @@
 
 @section('content')
 
-<div class="top-card">
+@push('styles')
+<style>
+    .hero-pengeluaran-form {
+        background: linear-gradient(135deg, #1b4332, #2d6a4f);
+        border-radius: 26px;
+        padding: 28px 32px;
+        color: #fff;
+        margin-bottom: 24px;
+    }
+    .hero-pengeluaran-form .page-title,
+    .hero-pengeluaran-form .page-subtitle { color: #fff; }
+</style>
+@endpush
 
+<div class="hero-pengeluaran-form">
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-
         <div>
-            <h1 class="page-title">
-                Input Pengeluaran
-            </h1>
-
-            <p class="page-subtitle">
-                Input beberapa pengeluaran dari pengajuan yang sudah direalisasi dana.
+            <span class="badge bg-light text-success mb-2">Form Transaksi Pengeluaran</span>
+            <h1 class="page-title mb-1">Input Pengeluaran</h1>
+            <p class="page-subtitle mb-0 opacity-90">
+                Input rincian pengeluaran per kategori (pengajuan sudah direalisasi).
             </p>
         </div>
-
-        {{-- TOMBOL KEMBALI DASHBOARD --}}
-        <a href="{{ route('dashboard') }}" class="btn btn-secondary mb-3">
-            ← Kembali Dashboard
+        <a href="{{ route('pengeluaran.index') }}" class="btn btn-light btn-sm rounded-pill">
+            ← Daftar Pengeluaran
         </a>
-
     </div>
 </div>
 

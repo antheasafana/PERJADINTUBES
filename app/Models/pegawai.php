@@ -19,6 +19,7 @@ class Pegawai extends Model
         'posisi',
         'tanggal_lahir',
         'upload_KTP',
-        'is_admin'
+        'is_admin',
+        'email',
     ];
 }

@@ -39,8 +39,9 @@ class JenisTransaksiResource extends Resource
                 Select::make('jenis_transaksi')
                     ->label('Jenis Transaksi')
                     ->options([
-                        'Reimbursement' => 'Reimbursement',
-                        'Uang muka' => 'Uang muka',
+                        JenisTransaksi::UANG_MUKA => JenisTransaksi::UANG_MUKA,
+                        JenisTransaksi::REIMBURSEMENT => JenisTransaksi::REIMBURSEMENT,
+                        JenisTransaksi::PENGEMBALIAN => JenisTransaksi::PENGEMBALIAN,
                     ])
                     ->required(),
 

@@ -12,6 +12,11 @@
                 Review semua permintaan verifikasi pengajuan dan pengeluaran dari pegawai.
             </p>
         </div>
+        <div>
+            <a href="{{ route('verifikasi.pdf') }}" target="_blank" class="btn btn-success">
+                Unduh PDF Verifikasi
+            </a>
+        </div>
     </div>
 </div>
 

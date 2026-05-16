@@ -72,13 +72,16 @@
         </div>
 
         <div class="d-flex flex-wrap gap-2">
-            <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-kembali">
-                ← Kembali Dashboard
-            </a>
-
-            <a href="{{ route('pengajuan.index') }}" class="btn btn-kembali">
-                Kembali Pengajuan Saya
-            </a>
+            <a href="{{ route('pengajuan.pdf.ringkas', $pengajuan->id_pengajuan) }}"
+               class="btn btn-outline-secondary btn-kembali"
+               target="_blank">📄 Unduh PDF</a>
+            @if($pengajuan->realisasiDana && $pengajuan->realisasiDana->status === 'TEREALISASI')
+            <a href="{{ route('pengajuan.realisasi.pdf', $pengajuan->id_pengajuan) }}"
+               class="btn btn-outline-primary btn-kembali"
+               target="_blank">💰 PDF Realisasi</a>
+            @endif
+            <a href="{{ route('dashboard') }}" class="btn btn-outline-secondary btn-kembali">← Dashboard</a>
+            <a href="{{ route('pengajuan.index') }}" class="btn btn-kembali">Pengajuan Saya</a>
         </div>
     </div>
 

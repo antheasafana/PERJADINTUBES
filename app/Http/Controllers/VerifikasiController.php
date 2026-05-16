@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Http\Controllers;
 
@@ -94,6 +94,34 @@ class VerifikasiController extends Controller
         );
     }
 
+    public function exportPdf()
+    {
+        $verifikasis = Verifikasi::with([
+
+                'pengajuan.pegawai',
+
+                'transaksiPengeluaran.pengajuan.pegawai',
+
+                'transaksiPengeluaran.kategoriBiaya',
+
+                'transaksiPengeluaran.akun'
+            ])
+            ->where('status', 'pending')
+            ->latest()
+            ->get();
+
+        $pengajuan = $verifikasis->whereNull('id_transaksi_pengeluaran');
+        $pengeluaran = $verifikasis->whereNotNull('id_transaksi_pengeluaran');
+
+        $pdf = Pdf::loadView(
+            'pdf.verifikasi',
+            compact('pengajuan', 'pengeluaran')
+        )
+        ->setPaper('a4', 'landscape');
+
+        return $pdf->download('verifikasi-transaksi.pdf');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | APPROVE
@@ -177,97 +205,10 @@ class VerifikasiController extends Controller
                     'Pembayaran',
             ]);
 
-            /*
-            |--------------------------------------------------------------------------
-            | TENTUKAN JENIS PEMBAYARAN
-            |--------------------------------------------------------------------------
-            */
-
-            $jenisPengajuan =
-                $transaksi->pengajuan->jenis_pengajuan;
-
-            $jenisPembayaran = match ($jenisPengajuan) {
-
-                'UANG_MUKA' =>
-                    'uang_muka',
-
-                'PENGEMBALIAN' =>
-                    'pengembalian_dana',
-
-                default =>
-                    'reimbursement',
-            };
-
-            /*
-            |--------------------------------------------------------------------------
-            | ARAH TRANSAKSI
-            |--------------------------------------------------------------------------
-            */
-
-            $arahTransaksi =
-                $jenisPengajuan === 'PENGEMBALIAN'
-                ? 'pegawai_ke_admin'
-                : 'admin_ke_pegawai';
-
-            /*
-            |--------------------------------------------------------------------------
-            | SIMPAN PEMBAYARAN
-            |--------------------------------------------------------------------------
-            */
-
-            Pembayaran::create([
-
-                'id_pengajuan' =>
-                    $transaksi->id_pengajuan,
-
-                'id_transaksi_pengeluaran' =>
-                    $transaksi->id_transaksi_pengeluaran,
-
-                'jenis_pembayaran' =>
-                    $jenisPembayaran,
-
-                'arah_transaksi' =>
-                    $arahTransaksi,
-
-                'nominal' =>
-                    $transaksi->nominal,
-
-                'status' =>
-                    'dibayar',
-
-                'tanggal_pembayaran' =>
-                    now(),
-            ]);
-
-            /*
-            |--------------------------------------------------------------------------
-            | UPDATE TRANSAKSI FINAL
-            |--------------------------------------------------------------------------
-            */
-
-            $transaksi->update([
-
-                'status' =>
-                    'transaksi_tercatat',
-
-                'tanggal_pembayaran' =>
-                    now(),
-
-                'tanggal_tercatat' =>
-                    now(),
-            ]);
-
-            /*
-            |--------------------------------------------------------------------------
-            | UPDATE STATUS PENGAJUAN
-            |--------------------------------------------------------------------------
-            */
-
-            $transaksi->pengajuan->update([
-
-                'status' =>
-                    'Transaksi Tercatat'
-            ]);
+            Pembayaran::createPendingForPengajuan(
+                $transaksi->pengajuan,
+                $transaksi
+            );
 
             /*
             |--------------------------------------------------------------------------
@@ -315,7 +256,7 @@ class VerifikasiController extends Controller
                 ->route('verifikasi.index')
                 ->with(
                     'success',
-                    'Pengeluaran berhasil diverifikasi dan pembayaran selesai.'
+                    'Pengeluaran berhasil diverifikasi. Silakan proses pembayaran di menu Pembayaran.'
                 );
         }
 
@@ -334,55 +275,12 @@ class VerifikasiController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $pengajuan->update([
-
-            'status' =>
-                'Pembayaran',
-        ]);
-
-        /*
-        |--------------------------------------------------------------------------
-        | KHUSUS UANG MUKA
-        |--------------------------------------------------------------------------
-        */
-
-        if (
-            $pengajuan->jenis_pengajuan ==
-            'UANG_MUKA'
-        ) {
-
-            Pembayaran::create([
-
-                'id_pengajuan' =>
-                    $pengajuan->id_pengajuan,
-
-                'jenis_pembayaran' =>
-                    'uang_muka',
-
-                'arah_transaksi' =>
-                    'admin_ke_pegawai',
-
-                'nominal' =>
-                    $pengajuan->estimasi_biaya,
-
-                'status' =>
-                    'dibayar',
-
-                'tanggal_pembayaran' =>
-                    now(),
-            ]);
-
-            /*
-            |--------------------------------------------------------------------------
-            | UPDATE STATUS FINAL
-            |--------------------------------------------------------------------------
-            */
-
+        if ($pengajuan->jenis_pengajuan === 'UANG_MUKA') {
             $pengajuan->update([
-
-                'status' =>
-                    'Transaksi Tercatat'
+                'status' => 'Pembayaran',
             ]);
+
+            Pembayaran::createPendingForPengajuan($pengajuan);
         }
 
         /*

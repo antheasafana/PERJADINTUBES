@@ -25,6 +25,7 @@
                         <th>Jenis</th>
                         <th>Tujuan</th>
                         <th>Nominal</th>
+                        <th>No. Rekening</th>
                         <th>Status</th>
                         <th>Arah</th>
                         <th>Tanggal</th>
@@ -55,19 +56,17 @@
                         </td>
 
                         <td>
+                            {{ $item->no_rekening_pegawai ?? '-' }}
+                        </td>
+
+                        <td>
 
                             @if($item->status == 'dibayar')
-
-                                <span class="badge bg-success">
-                                    Dibayar
-                                </span>
-
+                                <span class="badge bg-success">Dibayar</span>
+                            @elseif($item->status == 'pending')
+                                <span class="badge bg-warning text-dark">Menunggu</span>
                             @else
-
-                                <span class="badge bg-danger">
-                                    Belum Dibayar
-                                </span>
-
+                                <span class="badge bg-secondary">{{ $item->status }}</span>
                             @endif
 
                         </td>
@@ -86,7 +85,7 @@
 
                     <tr>
 
-                        <td colspan="7" class="text-center">
+                        <td colspan="8" class="text-center">
 
                             Belum ada pembayaran
 

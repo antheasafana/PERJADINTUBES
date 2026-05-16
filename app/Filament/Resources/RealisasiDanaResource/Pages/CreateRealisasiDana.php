@@ -17,7 +17,7 @@ class CreateRealisasiDana extends CreateRecord
    protected function afterCreate(): void
     {
         $this->record->pengajuan->update([
-            'status' => 'Direalisasi'
+            'status' => 'Direalisasikan',
         ]);
 
         Notification::make()
