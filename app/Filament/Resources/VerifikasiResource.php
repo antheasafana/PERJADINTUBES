@@ -2,94 +2,66 @@
 
 namespace App\Filament\Resources;
 
-use App\Models\Verifikasi;
 use App\Filament\Resources\VerifikasiResource\Pages;
-
-use Filament\Forms;
-use Filament\Tables;
-
-use Filament\Forms\Form;
-use Filament\Tables\Table;
-
-use Filament\Resources\Resource;
-
+use App\Models\Pembayaran;
+use App\Models\Verifikasi;
+use App\Services\PerjadinDocumentService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Form;
+use Filament\Notifications\Notification;
+use Filament\Resources\Resource;
+use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
-
-use App\Models\RealisasiDana;
-use App\Models\TransaksiPengeluaran;
+use Filament\Tables\Table;
 
 class VerifikasiResource extends Resource
 {
-    /*
-    |--------------------------------------------------------------------------
-    | MODEL
-    |--------------------------------------------------------------------------
-    */
-
     protected static ?string $model = Verifikasi::class;
 
-    protected static ?string $navigationIcon =
-        'heroicon-o-check-badge';
+    protected static ?string $navigationIcon = 'heroicon-o-check-badge';
 
-    protected static ?string $navigationLabel =
-        'Verifikasi Pengajuan';
+    protected static ?string $navigationLabel = 'Verifikasi Pengajuan';
 
-    protected static ?string $navigationGroup =
-        'Transaksi';
+    protected static ?string $navigationGroup = 'Transaksi';
 
     protected static ?int $navigationSort = 2;
 
-    /*
-    |--------------------------------------------------------------------------
-    | FORM
-    |--------------------------------------------------------------------------
-    */
-
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-
-                Textarea::make('catatan')
-                    ->label('Catatan Verifikasi')
-                    ->rows(4),
-
-                Textarea::make('alasan_reject')
-                    ->label('Alasan Reject')
-                    ->rows(4),
-            ]);
+        return $form->schema([
+            Textarea::make('catatan')->label('Catatan Verifikasi')->rows(4),
+            Textarea::make('alasan_reject')->label('Alasan Reject')->rows(4),
+        ]);
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | TABLE
-    |--------------------------------------------------------------------------
-    */
 
     public static function table(Table $table): Table
     {
         return $table
-
             ->query(
                 Verifikasi::query()
                     ->where('status', 'pending')
-                    ->with(['pengajuan', 'transaksiPengeluaran'])
+                    ->with([
+                        'pengajuan.pegawai',
+                        'transaksiPengeluaran.kategoriBiaya',
+                        'transaksiPengeluaran.pengajuan',
+                    ])
             )
-
             ->columns([
-
-                TextColumn::make('id')
-                    ->label('ID'),
+                TextColumn::make('id')->label('ID')->sortable(),
 
                 TextColumn::make('verification_type')
                     ->label('Jenis Verifikasi')
                     ->badge(),
 
-                TextColumn::make('transaksiPengeluaran.id_transaksi_pengeluaran')
-                    ->label('ID Transaksi')
-                    ->searchable()
-                    ->sortable(),
+                TextColumn::make('transaksiPengeluaran.uraian')
+                    ->label('Uraian Pengeluaran')
+                    ->limit(35)
+                    ->placeholder('—')
+                    ->description(fn ($record) => $record->transaksiPengeluaran
+                        ? 'Rp ' . number_format($record->transaksiPengeluaran->nominal, 0, ',', '.')
+                        : null),
 
                 TextColumn::make('pengajuan.tujuan')
                     ->label('Tujuan Pengajuan')
@@ -99,161 +71,130 @@ class VerifikasiResource extends Resource
                     ->label('Jenis Pengajuan')
                     ->badge(),
 
-                TextColumn::make('pengajuan.estimasi_biaya')
-                    ->label('Estimasi Biaya')
-                    ->money('IDR'),
+                TextColumn::make('pengajuan.pegawai.nama')
+                    ->label('Pegawai'),
 
                 TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'pending'  => 'warning',
-                        'approve'  => 'success',
-                        'reject'   => 'danger',
-                        default    => 'gray',
+                        'pending' => 'warning',
+                        'approve' => 'success',
+                        'reject' => 'danger',
+                        default => 'gray',
                     }),
 
                 TextColumn::make('created_at')
                     ->label('Tanggal Masuk')
                     ->dateTime(),
             ])
+            ->headerActions([
+                Action::make('exportPdf')
+                    ->label('Unduh PDF Semua Pending')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('success')
+                    ->action(function () {
+                        $verifikasis = Verifikasi::with([
+                            'pengajuan',
+                            'transaksiPengeluaran.pengajuan',
+                        ])
+                            ->where('status', 'pending')
+                            ->latest()
+                            ->get();
 
-            ->filters([])
+                        $pengajuan = $verifikasis->whereNull('id_transaksi_pengeluaran');
+                        $pengeluaran = $verifikasis->whereNotNull('id_transaksi_pengeluaran');
 
+                        $pdf = Pdf::loadView('pdf.verifikasi', compact('pengajuan', 'pengeluaran'))
+                            ->setPaper('a4', 'landscape');
+
+                        return response()->streamDownload(
+                            fn () => print($pdf->output()),
+                            'verifikasi-transaksi.pdf'
+                        );
+                    }),
+            ])
             ->actions([
+                Tables\Actions\ViewAction::make()
+                    ->label('Detail & Approve'),
 
-                Tables\Actions\ViewAction::make(),
+                Tables\Actions\Action::make('pdfDetail')
+                    ->label('PDF')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->action(function ($record) {
+                        $pdf = PerjadinDocumentService::verifikasiPdf($record);
 
-                /*
-                |--------------------------------------------------------------------------
-                | APPROVE
-                |--------------------------------------------------------------------------
-                */
+                        return response()->streamDownload(
+                            fn () => print($pdf->output()),
+                            'verifikasi-' . $record->id . '.pdf'
+                        );
+                    }),
 
                 Tables\Actions\Action::make('approve')
                     ->label('Approve')
                     ->color('success')
                     ->icon('heroicon-o-check-circle')
                     ->requiresConfirmation()
-
                     ->form([
-
-                        Textarea::make('catatan')
-                            ->label('Catatan (opsional)')
-                            ->rows(3),
-
+                        Textarea::make('catatan')->label('Catatan (opsional)')->rows(3),
                     ])
-
                     ->action(function (array $data, $record) {
-
-                        /*
-                        |------------------------------------------------------------------
-                        | UPDATE VERIFIKASI
-                        |------------------------------------------------------------------
-                        */
-
                         $record->update([
-
-                            'status'             => 'approve',
-
-                            'catatan'            => $data['catatan'] ?? null,
-
+                            'status' => 'approve',
+                            'catatan' => $data['catatan'] ?? null,
                             'tanggal_verifikasi' => now(),
-
                         ]);
 
-                        /*
-                        |------------------------------------------------------------------
-                        | UPDATE STATUS PENGAJUAN
-                        |------------------------------------------------------------------
-                        */
-
-                        if ($record->pengajuan) {
-
-                            $record->pengajuan->update([
-
-                                'status' => 'Disetujui'
-
-                            ]);
-
-                            /*
-                            |--------------------------------------------------------------
-                            | AUTO MASUK REALISASI DANA
-                            |--------------------------------------------------------------
-                            */
-
-                            if (
-                                $record->pengajuan->jenis_pengajuan
-                                === 'UANG_MUKA'
-                            ) {
-
-                                RealisasiDana::firstOrCreate(
-
-                                    [
-                                        'id_pengajuan' =>
-                                        $record->pengajuan->id_pengajuan,
-                                    ],
-
-                                    [
-                                        'status' => 'PENDING',
-                                    ]
-
-                                );
-                            }
+                        if ($record->transaksiPengeluaran) {
+                            $transaksi = $record->transaksiPengeluaran;
+                            $transaksi->update(['status' => 'pembayaran', 'tanggal_verifikasi' => now()]);
+                            $transaksi->pengajuan?->update(['status' => 'Pembayaran']);
+                            Pembayaran::createPendingForPengajuan($transaksi->pengajuan, $transaksi);
+                        } elseif ($record->pengajuan?->jenis_pengajuan === 'UANG_MUKA') {
+                            Pembayaran::createPendingForPengajuan($record->pengajuan);
+                            $record->pengajuan->update(['status' => 'Pembayaran']);
                         }
-                    }),
 
-                /*
-                |--------------------------------------------------------------------------
-                | REJECT
-                |--------------------------------------------------------------------------
-                */
+                        $record->refresh();
+                        PerjadinDocumentService::sendVerifikasiEmail($record, 'approve');
+
+                        Notification::make()->title('Disetujui & email terkirim')->success()->send();
+                    }),
 
                 Tables\Actions\Action::make('reject')
                     ->label('Tolak')
                     ->color('danger')
                     ->icon('heroicon-o-x-circle')
                     ->requiresConfirmation()
-
                     ->form([
-
-                        Textarea::make('alasan_reject')
-                            ->label('Alasan Penolakan')
-                            ->required(),
-
+                        Textarea::make('alasan_reject')->label('Alasan Penolakan')->required(),
                     ])
-
                     ->action(function (array $data, $record) {
-
                         $record->update([
-
-                            'status'             => 'reject',
-
-                            'alasan_reject'      => $data['alasan_reject'],
-
+                            'status' => 'reject',
+                            'alasan_reject' => $data['alasan_reject'],
                             'tanggal_verifikasi' => now(),
-
                         ]);
 
-                        if ($record->pengajuan) {
-
-                            $record->pengajuan->update([
-
-                                'status' => 'Ditolak'
-
+                        if ($record->transaksiPengeluaran) {
+                            $record->transaksiPengeluaran->update([
+                                'status' => 'ditolak',
+                                'catatan_verifikasi' => $data['alasan_reject'],
                             ]);
+                            $record->transaksiPengeluaran->pengajuan?->update(['status' => 'Pengeluaran Ditolak']);
+                        } else {
+                            $record->pengajuan?->update(['status' => 'Ditolak']);
                         }
+
+                        $record->refresh();
+                        PerjadinDocumentService::sendVerifikasiEmail($record, 'reject');
+
+                        Notification::make()->title('Ditolak & email terkirim')->success()->send();
                     }),
-
             ])
-
             ->bulkActions([
-
                 Tables\Actions\BulkActionGroup::make([
-
                     Tables\Actions\DeleteBulkAction::make(),
-
                 ]),
-
             ]);
     }
 
@@ -265,13 +206,10 @@ class VerifikasiResource extends Resource
     public static function getPages(): array
     {
         return [
-
-            'index'  => Pages\ListVerifikasis::route('/'),
-
+            'index' => Pages\ListVerifikasis::route('/'),
             'create' => Pages\CreateVerifikasi::route('/create'),
-
-            'edit'   => Pages\EditVerifikasi::route('/{record}/edit'),
-
+            'view' => Pages\ViewVerifikasi::route('/{record}'),
+            'edit' => Pages\EditVerifikasi::route('/{record}/edit'),
         ];
     }
 }

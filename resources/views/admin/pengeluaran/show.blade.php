@@ -144,17 +144,10 @@
     <div class="table-card">
         <h4 class="fw-bold mb-3">Tindakan Pembayaran</h4>
 
-        <form action="{{ route('pengeluaran.pembayaran', $pengeluaran->id_transaksi_pengeluaran) }}" method="POST">
-            @csrf
-
-            <p class="text-muted">
-                Klik tombol di bawah untuk menandai transaksi sebagai dibayar dan tercatat.
-            </p>
-
-            <button type="submit" class="btn btn-green">
-                Proses Pembayaran
-            </button>
-        </form>
+        <p class="text-muted mb-0">
+            Transaksi ini menunggu pembayaran. Buka menu <strong>Pembayaran</strong> di panel admin,
+            lalu isi <strong>nominal dibayar</strong> dan <strong>no. rekening pegawai</strong> untuk menyelesaikan pembayaran.
+        </p>
     </div>
 @elseif($pengeluaran->status == 'transaksi_tercatat')
     <div class="table-card">

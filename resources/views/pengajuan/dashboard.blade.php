@@ -151,6 +151,7 @@
         <a href="{{ route('dashboard') }}" class="active">Dashboard</a>
         <a href="{{ route('pengajuan.index') }}">Pengajuan Saya</a>
         <a href="{{ route('pengajuan.create') }}">Buat Pengajuan</a>
+        <a href="{{ route('realisasi.index') }}">Realisasi Dana</a>
         <a href="{{ route('pengeluaran.index') }}">Transaksi Pengeluaran</a>
     </div>
 
@@ -164,8 +165,11 @@
                 Buat Pengajuan
             </a>
 
+            <a href="{{ route('realisasi.index') }}" class="btn-green ms-2">
+                Realisasi Dana
+            </a>
             <a href="{{ route('pengeluaran.index') }}" class="btn-green ms-2">
-                Lihat Pengeluaran
+                Transaksi Pengeluaran
             </a>
         </div>
 

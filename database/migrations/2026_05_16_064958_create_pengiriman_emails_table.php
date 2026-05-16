@@ -10,22 +10,24 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    Schema::create('pengiriman_emails', function (Blueprint $table) {
+    {
+        if (! Schema::hasTable('pengiriman_emails')) {
+            Schema::create('pengiriman_emails', function (Blueprint $table) {
 
-        $table->id();
+                $table->id();
 
-        $table->foreignId('id_realisasi')
-              ->constrained('realisasi_dana');
+                $table->foreignId('id_realisasi')
+                      ->constrained('realisasi_dana');
 
-        $table->string('email');
+                $table->string('email');
 
-        $table->boolean('status_kirim')
-              ->default(false);
+                $table->boolean('status_kirim')
+                      ->default(false);
 
-        $table->timestamps();
-    });
-}
+                $table->timestamps();
+            });
+        }
+    }
 
     /**
      * Reverse the migrations.

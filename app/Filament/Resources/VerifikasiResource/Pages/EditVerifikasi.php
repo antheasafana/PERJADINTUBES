@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\VerifikasiResource\Pages;
 
 use App\Filament\Resources\VerifikasiResource;
-use App\Models\RealisasiDana;
+use App\Models\Pembayaran;
 use Filament\Resources\Pages\EditRecord;
 
 class EditVerifikasi extends EditRecord
@@ -12,35 +12,40 @@ class EditVerifikasi extends EditRecord
 
     protected function afterSave(): void
     {
-        $verifikasi = $this->record;
+        $verifikasi = $this->record->fresh(['pengajuan', 'transaksiPengeluaran.pengajuan']);
 
-        $pengajuan = $verifikasi->pengajuan;
+        if ($verifikasi->status !== 'approve') {
+            return;
+        }
 
-        /*
-        |--------------------------------------------------------------------------
-        | AUTO MASUK REALISASI DANA
-        |--------------------------------------------------------------------------
-        */
+        if ($verifikasi->transaksiPengeluaran) {
+            $transaksi = $verifikasi->transaksiPengeluaran;
 
-        if (
-            $pengajuan->jenis_pengajuan === 'UANG_MUKA'
-            &&
-            $verifikasi->status === 'approve'
-        ) {
+            $transaksi->update([
+                'status' => 'pembayaran',
+                'tanggal_verifikasi' => now(),
+            ]);
 
-            RealisasiDana::updateOrCreate(
-                [
-                    'id_pengajuan' => $pengajuan->id_pengajuan,
-                ],
-                [
-                    'tgl_realisasi' => now(),
-                    'total_realisasi' => $pengajuan->estimasi_biaya,
-                    'status' => 'PENDING',
-                ]
+            $transaksi->pengajuan?->update([
+                'status' => 'Pembayaran',
+            ]);
+
+            Pembayaran::createPendingForPengajuan(
+                $transaksi->pengajuan,
+                $transaksi
             );
 
-            $pengajuan->update([
-                'status' => 'Direalisasikan'
+            return;
+        }
+
+        if (
+            $verifikasi->pengajuan
+            && $verifikasi->pengajuan->jenis_pengajuan === 'UANG_MUKA'
+        ) {
+            Pembayaran::createPendingForPengajuan($verifikasi->pengajuan);
+
+            $verifikasi->pengajuan->update([
+                'status' => 'Pembayaran',
             ]);
         }
     }

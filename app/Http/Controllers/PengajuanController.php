@@ -3,16 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Log;
-
 use App\Models\Pengajuan;
 use App\Models\Pegawai;
 use App\Models\RealisasiDana;
 use App\Models\TransaksiPengeluaran;
 use App\Models\Verifikasi;
 
-use App\Mail\TesMail;
+use App\Services\PerjadinDocumentService;
 
 class PengajuanController extends Controller
 {
@@ -154,30 +151,6 @@ class PengajuanController extends Controller
 
         /*
         |--------------------------------------------------------------------------
-        | KIRIM EMAIL
-        |--------------------------------------------------------------------------
-        */
-
-        try {
-
-            if ($pegawai->email) {
-
-                Mail::to($pegawai->email)
-                    ->send(
-                        new TesMail($pengajuan)
-                    );
-            }
-
-        } catch (\Exception $e) {
-
-            Log::error(
-                'Email gagal dikirim: ' .
-                $e->getMessage()
-            );
-        }
-
-        /*
-        |--------------------------------------------------------------------------
         | FLOW PENGAJUAN
         |--------------------------------------------------------------------------
         */
@@ -212,55 +185,127 @@ class PengajuanController extends Controller
             /*
             |--------------------------------------------------------------------------
             | REIMBURSEMENT / PENGEMBALIAN
-            | LANGSUNG MASUK REALISASI
+            | PLACEHOLDER REALISASI — PEGAWAI ISI NOMINAL AKTUAL
             |--------------------------------------------------------------------------
             */
 
             RealisasiDana::create([
-
-                'id_pengajuan' =>
-                    $pengajuan->id_pengajuan,
-
+                'id_pengajuan' => $pengajuan->id_pengajuan,
                 'tgl_realisasi' => now(),
-
-                'total_realisasi' =>
-                    $request->estimasi_biaya,
-
+                'total_realisasi' => 0,
                 'status' => 'PENDING',
             ]);
 
             $pengajuan->update([
-
-                'status' =>
-                    'Direalisasikan'
-
+                'status' => 'Menunggu Realisasi Dana',
             ]);
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | REDIRECT
-        |--------------------------------------------------------------------------
-        */
+        $pengajuan->load('pegawai');
+        PerjadinDocumentService::sendPengajuanBerhasilEmail($pengajuan);
 
         return redirect()
             ->route('pengajuan.index')
             ->with(
                 'success',
-                'Pengajuan berhasil dikirim & email berhasil dikirim!'
+                'Pengajuan berhasil dikirim. Notifikasi email telah dikirim ke pegawai.'
+            );
+    }
+
+    public function realisasiIndex()
+    {
+        $menungguRealisasi = Pengajuan::with('realisasiDana')
+            ->whereIn('jenis_pengajuan', ['REIMBURSEMENT', 'PENGEMBALIAN'])
+            ->whereHas('realisasiDana', function ($query) {
+                $query->where('status', 'PENDING');
+            })
+            ->latest()
+            ->get();
+
+        $sudahRealisasi = Pengajuan::with('realisasiDana')
+            ->whereIn('jenis_pengajuan', ['REIMBURSEMENT', 'PENGEMBALIAN'])
+            ->whereHas('realisasiDana', function ($query) {
+                $query->where('status', 'TEREALISASI')
+                    ->where('total_realisasi', '>', 0);
+            })
+            ->latest()
+            ->get();
+
+        return view('realisasi.index', compact('menungguRealisasi', 'sudahRealisasi'));
+    }
+
+    public function realisasiForm($id)
+    {
+        $pengajuan = Pengajuan::with('realisasiDana')
+            ->findOrFail($id);
+
+        if (! in_array($pengajuan->jenis_pengajuan, ['REIMBURSEMENT', 'PENGEMBALIAN'], true)) {
+            return redirect()
+                ->route('pengajuan.index')
+                ->with('error', 'Realisasi dana hanya untuk reimbursement atau pengembalian.');
+        }
+
+        if (
+            ! $pengajuan->realisasiDana
+            || $pengajuan->realisasiDana->status === 'TEREALISASI'
+        ) {
+            return redirect()
+                ->route('realisasi.index')
+                ->with('info', 'Realisasi dana sudah diinput.');
+        }
+
+        return view('pengajuan.realisasi', compact('pengajuan'));
+    }
+
+    public function realisasiStore(Request $request, $id)
+    {
+        $pengajuan = Pengajuan::with('realisasiDana')
+            ->findOrFail($id);
+
+        if (! in_array($pengajuan->jenis_pengajuan, ['REIMBURSEMENT', 'PENGEMBALIAN'], true)) {
+            return redirect()
+                ->route('pengajuan.index')
+                ->with('error', 'Realisasi dana hanya untuk reimbursement atau pengembalian.');
+        }
+
+        $request->validate([
+            'total_realisasi' => 'required|numeric|min:1',
+            'tgl_realisasi' => 'required|date',
+        ]);
+
+        $realisasi = $pengajuan->realisasiDana;
+
+        if (! $realisasi || $realisasi->status === 'TEREALISASI') {
+            return redirect()
+                ->route('realisasi.index')
+                ->with('info', 'Realisasi dana sudah diinput.');
+        }
+
+        $realisasi->update([
+            'total_realisasi' => $request->total_realisasi,
+            'tgl_realisasi' => $request->tgl_realisasi,
+            'status' => 'TEREALISASI',
+        ]);
+
+        $pengajuan->update([
+            'status' => 'Direalisasikan',
+        ]);
+
+        return redirect()
+            ->route('realisasi.index')
+            ->with(
+                'success',
+                'Realisasi dana berhasil disimpan. Silakan lanjut ke Transaksi Pengeluaran.'
             );
     }
 
     public function show($id)
     {
         $pengajuan = Pengajuan::with([
-
                 'realisasiDana',
-
-                'transaksiPengeluaran',
-
+                'transaksiPengeluaran.kategoriBiaya',
+                'transaksiPengeluaran.akun',
                 'verifikasi',
-
             ])
             ->findOrFail($id);
 
@@ -268,6 +313,39 @@ class PengajuanController extends Controller
             'pengajuan.show',
             compact('pengajuan')
         );
+    }
+
+    public function exportPdf($id)
+    {
+        $pengajuan = Pengajuan::findOrFail($id);
+
+        $pdf = PerjadinDocumentService::pengajuanPdf($pengajuan);
+
+        return $pdf->download('pengajuan-' . $pengajuan->id_pengajuan . '-lengkap.pdf');
+    }
+
+    public function exportPengajuanRingkasPdf($id)
+    {
+        $pengajuan = Pengajuan::findOrFail($id);
+
+        $pdf = PerjadinDocumentService::pengajuanRingkasPdf($pengajuan);
+
+        return $pdf->download('pengajuan-' . $pengajuan->id_pengajuan . '.pdf');
+    }
+
+    public function exportRealisasiPdf($id)
+    {
+        $pengajuan = Pengajuan::with('realisasiDana')->findOrFail($id);
+
+        if (! $pengajuan->realisasiDana) {
+            return redirect()
+                ->back()
+                ->with('error', 'Belum ada data realisasi dana.');
+        }
+
+        $pdf = PerjadinDocumentService::realisasiDanaPdf($pengajuan->realisasiDana);
+
+        return $pdf->download('realisasi-dana-' . $pengajuan->id_pengajuan . '.pdf');
     }
 
     public function edit($id)

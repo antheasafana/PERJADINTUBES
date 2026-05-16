@@ -17,7 +17,8 @@
 <body>
     <div class="container">
         <h2>🌿 E-Perjadin</h2>
-        <p>Pengajuan perjalanan dinas Anda telah berhasil diajukan!</p>
+        <p>Pengajuan perjalanan dinas Anda telah <strong>berhasil diajukan</strong> dan tercatat di sistem.</p>
+        <p>Status saat ini: <strong>{{ $pengajuan->status }}</strong>. Lampiran PDF berisi ringkasan pengajuan Anda.</p>
 
         <table>
             <tr>

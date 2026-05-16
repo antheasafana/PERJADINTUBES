@@ -55,19 +55,10 @@ class RealisasiDanaResource extends Resource
                                 ->label('Pengajuan')
                                 ->options(
                                     Pengajuan::whereDoesntHave('realisasiDana')
-                                        ->where(function ($query) {
-                                            $query->whereIn('jenis_pengajuan', [
-                                                'REIMBURSEMENT',
-                                                'PENGEMBALIAN',
-                                            ])
-                                            ->orWhere(function ($subQuery) {
-                                                $subQuery
-                                                    ->where('jenis_pengajuan', 'UANG_MUKA')
-                                                    ->whereHas('verifikasi', function ($verifikasi) {
-                                                        $verifikasi->where('status', 'approve');
-                                                    });
-                                            });
-                                        })
+                                        ->whereIn('jenis_pengajuan', [
+                                            'REIMBURSEMENT',
+                                            'PENGEMBALIAN',
+                                        ])
                                         ->pluck('tujuan', 'id_pengajuan')
                                 )
                                 ->disabled(),
@@ -204,20 +195,20 @@ class RealisasiDanaResource extends Resource
                 ->color('success')
                 ->action(function () {
 
-                    $realisasiDana = RealisasiDana::all();
+                    $realisasi = RealisasiDana::first();
 
                     $pdf = Pdf::loadView(
                         'pdf.realisasidana',
                         [
-                            'realisasiDana' => $realisasiDana
+                            'realisasi' => $realisasi,
                         ]
                     );
 
-        return response()->streamDownload(
-            fn () => print($pdf->output()),
-            'realisasi-dana.pdf'
-        );
-    })
+                    return response()->streamDownload(
+                        fn () => print($pdf->output()),
+                        'realisasi-dana.pdf'
+                    );
+                })
             ])
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),

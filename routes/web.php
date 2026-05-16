@@ -53,6 +53,11 @@ Route::post('/logout', [
     'logout'
 ])->name('logout');
 
+Route::get('/admin/verifikasi/pdf', [
+    VerifikasiController::class,
+    'exportPdf'
+])->name('verifikasi.pdf');
+
 /*
 |--------------------------------------------------------------------------
 | PEGAWAI
@@ -98,6 +103,31 @@ Route::middleware('pegawai')->group(function () {
         'show'
     ])->name('pengajuan.view');
 
+    Route::get('/pengajuan/{id}/pdf', [
+        PengajuanController::class,
+        'exportPdf',
+    ])->name('pengajuan.pdf');
+
+    Route::get('/pengajuan/{id}/pdf-ringkas', [
+        PengajuanController::class,
+        'exportPengajuanRingkasPdf',
+    ])->name('pengajuan.pdf.ringkas');
+
+    Route::get('/pengajuan/{id}/realisasi-pdf', [
+        PengajuanController::class,
+        'exportRealisasiPdf',
+    ])->name('pengajuan.realisasi.pdf');
+
+    Route::get('/pengajuan/{id}/realisasi', [
+        PengajuanController::class,
+        'realisasiForm'
+    ])->name('pengajuan.realisasi');
+
+    Route::post('/pengajuan/{id}/realisasi', [
+        PengajuanController::class,
+        'realisasiStore'
+    ])->name('pengajuan.realisasi.store');
+
     Route::get('/pengajuan/{id}/edit', [
         PengajuanController::class,
         'edit'
@@ -113,10 +143,20 @@ Route::middleware('pegawai')->group(function () {
         'destroy'
     ])->name('pengajuan.destroy');
 
-     Route::get('/pengeluaran', [
+    Route::get('/realisasi-dana', [
+        PengajuanController::class,
+        'realisasiIndex',
+    ])->name('realisasi.index');
+
+    Route::get('/pengeluaran', [
         TransaksiPengeluaranController::class,
         'index'
     ])->name('pengeluaran.index');
+
+    Route::get('/pengeluaran/{id}', [
+        TransaksiPengeluaranController::class,
+        'show'
+    ])->name('pengeluaran.show');
 
             Route::get('/pengeluaran/{id_pengajuan}/create', [
         TransaksiPengeluaranController::class,

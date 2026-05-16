@@ -121,4 +121,12 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Fallback penerima email (jika pegawai belum punya email)
+    |--------------------------------------------------------------------------
+    */
+
+    'test_recipient' => env('MAIL_TEST_RECIPIENT', env('MAIL_FROM_ADDRESS')),
+
 ];

@@ -167,6 +167,7 @@
                                     'Pembayaran' => 'badge-pembayaran',
                                     'Realisasi Dana' => 'badge-approved',
                                     'Direalisasikan' => 'badge-approved',
+                                    'Menunggu Realisasi Dana' => 'badge-verifikasi',
                                     default => 'badge-diajukan',
                                 };
                             @endphp
@@ -178,6 +179,44 @@
 
                         <td>
                             <div class="d-flex flex-wrap gap-2">
+
+                                @if(
+                                    in_array($item->jenis_pengajuan, ['REIMBURSEMENT', 'PENGEMBALIAN'])
+                                    && $item->realisasiDana
+                                    && $item->realisasiDana->status === 'PENDING'
+                                )
+                                <a href="{{ route('pengajuan.realisasi', $item->id_pengajuan) }}"
+                                   class="btn btn-sm rounded-pill"
+                                   style="background:#3b82c4;color:#fff;">
+                                    Input Realisasi
+                                </a>
+                                @endif
+
+                                <a href="{{ route('pengajuan.pdf.ringkas', $item->id_pengajuan) }}"
+                                   class="btn btn-sm btn-outline-secondary rounded-pill"
+                                   target="_blank"
+                                   title="PDF Pengajuan">
+                                    📄 PDF
+                                </a>
+
+                                @if($item->realisasiDana && $item->realisasiDana->status === 'TEREALISASI')
+                                <a href="{{ route('pengajuan.realisasi.pdf', $item->id_pengajuan) }}"
+                                   class="btn btn-sm rounded-pill"
+                                   style="background:#3b82c4;color:#fff;"
+                                   target="_blank"
+                                   title="PDF Realisasi">
+                                    💰 Realisasi
+                                </a>
+                                @endif
+
+                                @if($item->transaksiPengeluaran->count() > 0)
+                                <a href="{{ route('pengajuan.pdf', $item->id_pengajuan) }}"
+                                   class="btn btn-sm btn-outline-success rounded-pill"
+                                   target="_blank"
+                                   title="PDF + Pengeluaran">
+                                    📋 Lengkap
+                                </a>
+                                @endif
 
                                 <a href="{{ route('pengajuan.view', $item->id_pengajuan) }}"
                                    class="btn-view btn-sm">
