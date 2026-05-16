@@ -25,9 +25,6 @@ class VerifikasiResource extends Resource
     |--------------------------------------------------------------------------
     | MODEL
     |--------------------------------------------------------------------------
-    | ✅ FIX: Gunakan model Verifikasi (bukan TransaksiPengeluaran)
-    | Verifikasi di sini adalah approval admin atas pengajuan UANG_MUKA
-    | sesuai alur Step ② di gambar.
     */
 
     protected static ?string $model = Verifikasi::class;
@@ -73,12 +70,6 @@ class VerifikasiResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-
-            /*
-            |--------------------------------------------------------------------------
-            | HANYA STATUS PENDING (menunggu approval admin)
-            |--------------------------------------------------------------------------
-            */
 
             ->query(
                 Verifikasi::query()
@@ -134,9 +125,8 @@ class VerifikasiResource extends Resource
 
                 /*
                 |--------------------------------------------------------------------------
-                | APPROVE → trigger Realisasi Dana
+                | APPROVE
                 |--------------------------------------------------------------------------
-                | Setelah approve, status pengajuan berubah → admin bisa buat Realisasi Dana
                 */
 
                 Tables\Actions\Action::make('approve')
@@ -144,29 +134,71 @@ class VerifikasiResource extends Resource
                     ->color('success')
                     ->icon('heroicon-o-check-circle')
                     ->requiresConfirmation()
+
                     ->form([
+
                         Textarea::make('catatan')
                             ->label('Catatan (opsional)')
                             ->rows(3),
+
                     ])
+
                     ->action(function (array $data, $record) {
 
+                        /*
+                        |------------------------------------------------------------------
+                        | UPDATE VERIFIKASI
+                        |------------------------------------------------------------------
+                        */
+
                         $record->update([
-                            'status'              => 'approve',
-                            'catatan'             => $data['catatan'] ?? null,
-                            'tanggal_verifikasi'  => now(),
+
+                            'status'             => 'approve',
+
+                            'catatan'            => $data['catatan'] ?? null,
+
+                            'tanggal_verifikasi' => now(),
+
                         ]);
 
                         /*
-                        |--------------------------------------------------------------------------
-                        | UPDATE STATUS PENGAJUAN → siap direalisasi admin
-                        |--------------------------------------------------------------------------
+                        |------------------------------------------------------------------
+                        | UPDATE STATUS PENGAJUAN
+                        |------------------------------------------------------------------
                         */
 
                         if ($record->pengajuan) {
+
                             $record->pengajuan->update([
+
                                 'status' => 'Disetujui'
+
                             ]);
+
+                            /*
+                            |--------------------------------------------------------------
+                            | AUTO MASUK REALISASI DANA
+                            |--------------------------------------------------------------
+                            */
+
+                            if (
+                                $record->pengajuan->jenis_pengajuan
+                                === 'UANG_MUKA'
+                            ) {
+
+                                RealisasiDana::firstOrCreate(
+
+                                    [
+                                        'id_pengajuan' =>
+                                        $record->pengajuan->id_pengajuan,
+                                    ],
+
+                                    [
+                                        'status' => 'PENDING',
+                                    ]
+
+                                );
+                            }
                         }
                     }),
 
@@ -181,31 +213,47 @@ class VerifikasiResource extends Resource
                     ->color('danger')
                     ->icon('heroicon-o-x-circle')
                     ->requiresConfirmation()
+
                     ->form([
+
                         Textarea::make('alasan_reject')
                             ->label('Alasan Penolakan')
                             ->required(),
+
                     ])
+
                     ->action(function (array $data, $record) {
 
                         $record->update([
-                            'status'              => 'reject',
-                            'alasan_reject'       => $data['alasan_reject'],
-                            'tanggal_verifikasi'  => now(),
+
+                            'status'             => 'reject',
+
+                            'alasan_reject'      => $data['alasan_reject'],
+
+                            'tanggal_verifikasi' => now(),
+
                         ]);
 
                         if ($record->pengajuan) {
+
                             $record->pengajuan->update([
+
                                 'status' => 'Ditolak'
+
                             ]);
                         }
                     }),
+
             ])
 
             ->bulkActions([
+
                 Tables\Actions\BulkActionGroup::make([
+
                     Tables\Actions\DeleteBulkAction::make(),
+
                 ]),
+
             ]);
     }
 
@@ -217,9 +265,13 @@ class VerifikasiResource extends Resource
     public static function getPages(): array
     {
         return [
+
             'index'  => Pages\ListVerifikasis::route('/'),
+
             'create' => Pages\CreateVerifikasi::route('/create'),
+
             'edit'   => Pages\EditVerifikasi::route('/{record}/edit'),
+
         ];
     }
 }

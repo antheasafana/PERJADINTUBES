@@ -1,20 +1,36 @@
-<h2>Realisasi Dana</h2>
+<h2>Realisasi Dana Perjalanan Dinas</h2>
 
 <p>
-    Dana perjalanan dinas anda telah cair.
+    Halo,
 </p>
 
 <p>
-    <b>Tujuan:</b>
+    Pengajuan dana perjalanan dinas Anda telah berhasil direalisasikan.
+</p>
+
+<p>
+    Mohon menunggu proses pencairan dana dan pembayaran sesuai alur yang berlaku pada sistem perjalanan dinas.
+</p>
+
+<br>
+
+<p>
+    <b>Tujuan Perjalanan:</b><br>
     {{ $realisasi->pengajuan->tujuan }}
 </p>
 
 <p>
-    <b>Total Realisasi:</b>
+    <b>Total Realisasi Dana:</b><br>
     Rp {{ number_format($realisasi->total_realisasi, 0, ',', '.') }}
 </p>
 
 <p>
-    <b>Status:</b>
+    <b>Status Realisasi:</b><br>
     {{ $realisasi->status_realisasi }}
+</p>
+
+<br>
+
+<p>
+    Terima kasih.
 </p>

@@ -48,6 +48,10 @@ class RealisasiDana extends Model
         'tgl_realisasi',
 
         'total_realisasi',
+
+        'status',
+
+        'catatan'
     ];
 
     /*

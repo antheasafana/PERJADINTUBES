@@ -93,6 +93,11 @@
         color: white;
     }
 
+    .btn-danger {
+        border-radius: 20px;
+        padding: 8px 18px;
+    }
+
     .empty-state {
         padding: 40px;
         color: #6b7280;
@@ -148,9 +153,11 @@
                         <td>{{ \Carbon\Carbon::parse($item->tgl_berangkat)->format('d M Y') }}</td>
                         <td>{{ \Carbon\Carbon::parse($item->tgl_kembali)->format('d M Y') }}</td>
                         <td>Rp {{ number_format($item->estimasi_biaya,0,',','.') }}</td>
+
                         <td>
                             @php
                                 $status = $item->status;
+
                                 $badgeClass = match($status) {
                                     'Approved' => 'badge-approved',
                                     'Disetujui' => 'badge-approved',
@@ -163,18 +170,42 @@
                                     default => 'badge-diajukan',
                                 };
                             @endphp
+
                             <span class="{{ $badgeClass }}">
                                 {{ $status }}
                             </span>
                         </td>
+
                         <td>
-                            <a href="{{ route('pengajuan.view', $item->id_pengajuan) }}" class="btn-view btn-sm me-2">
-                                👁 View
-                            </a>
-                            <a href="{{ route('pengajuan.edit', $item->id_pengajuan) }}" class="btn-edit btn-sm">
-                                ✏ Edit
-                            </a>
+                            <div class="d-flex flex-wrap gap-2">
+
+                                <a href="{{ route('pengajuan.view', $item->id_pengajuan) }}"
+                                   class="btn-view btn-sm">
+                                    👁 View
+                                </a>
+
+                                <a href="{{ route('pengajuan.edit', $item->id_pengajuan) }}"
+                                   class="btn-edit btn-sm">
+                                    ✏ Edit
+                                </a>
+
+                                <form action="{{ route('pengajuan.destroy', $item->id_pengajuan) }}"
+                                      method="POST"
+                                      onsubmit="return confirm('Yakin ingin menghapus pengajuan ini?')">
+
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <button type="submit"
+                                            class="btn btn-danger btn-sm rounded-pill">
+                                        🗑 Delete
+                                    </button>
+
+                                </form>
+
+                            </div>
                         </td>
+
                     </tr>
                 @empty
                     <tr>

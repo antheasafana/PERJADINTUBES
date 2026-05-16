@@ -62,10 +62,11 @@ implements FilamentUser
      * AKSES FILAMENT
      * HANYA ADMIN
      */
-    public function canAccessPanel(
+     public function canAccessPanel(
         Panel $panel
     ): bool
     {
-        return $this->user_group === 'admin';
+        return auth()->check()
+            && $this->user_group === 'admin';
     }
 }

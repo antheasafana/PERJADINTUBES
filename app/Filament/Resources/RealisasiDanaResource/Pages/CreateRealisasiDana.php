@@ -14,15 +14,15 @@ class CreateRealisasiDana extends CreateRecord
 
     protected ?string $maxContentWidth = 'full';
 
-    protected function afterCreate(): void
+   protected function afterCreate(): void
     {
         $this->record->pengajuan->update([
-            'status_pengajuan' => 'Direalisasi',
+            'status' => 'Direalisasi'
         ]);
 
         Notification::make()
             ->title('Realisasi dana berhasil dibuat')
             ->success()
-            ->send();
+             ->send();
     }
 }
