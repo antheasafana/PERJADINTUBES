@@ -14,6 +14,8 @@ use App\Http\Controllers\PengajuanController;
 use App\Http\Controllers\TransaksiPengeluaranController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\VerifikasiController;
+use App\Http\Controllers\RealisasiDanaController;
+use App\Http\Controllers\PengirimanEmailController;
 
 /*
 |--------------------------------------------------------------------------
@@ -70,10 +72,6 @@ Route::middleware('pegawai')->group(function () {
         'dashboard'
     ])->name('dashboard');
 
-    Route::get('/pegawai', function () {
-        return redirect()->route('dashboard');
-    })->name('pegawai.dashboard');
-
     /*
     |--------------------------------------------------------------------------
     | PENGAJUAN
@@ -110,132 +108,36 @@ Route::middleware('pegawai')->group(function () {
         'update'
     ])->name('pengajuan.update');
 
-    /*
-    |--------------------------------------------------------------------------
-    | PENGELUARAN
-    |--------------------------------------------------------------------------
-    */
+    Route::delete('/pengajuan/{id}', [
+        PengajuanController::class,
+        'destroy'
+    ])->name('pengajuan.destroy');
 
-    Route::get('/pengeluaran', [
+     Route::get('/pengeluaran', [
         TransaksiPengeluaranController::class,
         'index'
     ])->name('pengeluaran.index');
 
-    Route::get('/pengeluaran/create/{id_pengajuan}', [
+            Route::get('/pengeluaran/{id_pengajuan}/create', [
         TransaksiPengeluaranController::class,
         'create'
     ])->name('pengeluaran.create');
 
-    Route::post('/pengeluaran/store/{id_pengajuan}', [
+    Route::post('/pengeluaran/{id_pengajuan}/store', [
         TransaksiPengeluaranController::class,
         'store'
     ])->name('pengeluaran.store');
 
-    Route::get('/pengeluaran/{id}', [
-        TransaksiPengeluaranController::class,
-        'show'
-    ])->name('pengeluaran.show');
-
-    /*
-    |--------------------------------------------------------------------------
-    | PEMBAYARAN PEGAWAI
-    |--------------------------------------------------------------------------
-    */
-
-    Route::get('/pembayaran', [
-        PembayaranController::class,
-        'index'
-    ])->name('pembayaran.index');
+    Route::get('/realisasi/{id}/pdf', [
+    RealisasiDanaController::class,
+    'exportPdf'
+    ]);
+    
+    // Proses pengiriman email (Sintaks dibersihkan)
+    Route::get('/kirim_email_realisasi', [PengirimanEmailController::class, 'kirim_email_realisasi'])
+    ->name('email.pembayaran');
+    
 
 });
 
-/*
-|--------------------------------------------------------------------------
-| ADMIN
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware('admin')
-    ->prefix('admin')
-    ->group(function () {
-
-        /*
-        |--------------------------------------------------------------------------
-        | VERIFIKASI PENGAJUAN
-        |--------------------------------------------------------------------------
-        */
-
-        Route::get('/verifikasi', [
-            VerifikasiController::class,
-            'index'
-        ])->name('verifikasi.index');
-
-        Route::get('/verifikasi/{id}', [
-            VerifikasiController::class,
-            'show'
-        ])->name('verifikasi.show');
-
-        Route::post('/verifikasi/{id}/approve', [
-            VerifikasiController::class,
-            'approve'
-        ])->name('verifikasi.approve');
-
-        Route::post('/verifikasi/{id}/reject', [
-            VerifikasiController::class,
-            'reject'
-        ])->name('verifikasi.reject');
-
-        /*
-        |--------------------------------------------------------------------------
-        | DETAIL PENGELUARAN
-        |--------------------------------------------------------------------------
-        */
-
-        Route::get('/pengeluaran/{id}', [
-            TransaksiPengeluaranController::class,
-            'showAdmin'
-        ])->name('admin.pengeluaran.show');
-
-        /*
-        |--------------------------------------------------------------------------
-        | APPROVE / REJECT PENGELUARAN
-        |--------------------------------------------------------------------------
-        */
-
-        Route::post('/pengeluaran/{id}/verifikasi', [
-            TransaksiPengeluaranController::class,
-            'verifikasi'
-        ])->name('pengeluaran.verifikasi');
-
-        /*
-        |--------------------------------------------------------------------------
-        | PEMBAYARAN
-        |--------------------------------------------------------------------------
-        */
-
-        Route::post('/pengeluaran/{id}/pembayaran', [
-            TransaksiPengeluaranController::class,
-            'pembayaran'
-        ])->name('pengeluaran.pembayaran');
-    });
-
-/*
-|--------------------------------------------------------------------------
-| TEST EMAIL MAILTRAP
-|--------------------------------------------------------------------------
-*/
-
-Route::get('/tesemail', function () {
-
-    $pengajuan = Pengajuan::latest()->first();
-
-    if (!$pengajuan) {
-        return "Tidak ada data pengajuan untuk testing email.";
-    }
-
-    Mail::to('test@mailtrap.io')->send(
-        new TesMail($pengajuan)
-    );
-
-    return "Email berhasil dikirim ke Mailtrap!";
-});
+    

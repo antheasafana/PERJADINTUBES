@@ -117,9 +117,19 @@
 
                 <div class="mb-4">
                     <label class="form-label">Estimasi Biaya</label>
+
                     <div class="input-group">
-                        <span class="input-group-text" style="background:#d8f3dc; border-color:#52b788; color:#1b4332; font-weight:600;">Rp</span>
-                        <input type="number" class="form-control" name="estimasi_biaya" value="{{ old('estimasi_biaya', $pengajuan->estimasi_biaya) }}">
+
+                        <span class="input-group-text"
+                            style="background:#d8f3dc; border-color:#52b788; color:#1b4332; font-weight:600;">
+                            Rp
+                        </span>
+
+                        <input type="text"
+                            class="form-control"
+                            name="estimasi_biaya"
+                            value="{{ old('estimasi_biaya', number_format($pengajuan->estimasi_biaya,0,',','.')) }}">
+
                     </div>
                 </div>
 

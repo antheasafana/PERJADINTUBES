@@ -6,6 +6,7 @@ use App\Filament\Resources\RealisasiDanaResource;
 use App\Mail\RealisasiDanaMail;
 
 use Filament\Resources\Pages\EditRecord;
+use Filament\Notifications\Notification;
 
 use Illuminate\Support\Facades\Mail;
 
@@ -13,22 +14,82 @@ class EditRealisasiDana extends EditRecord
 {
     protected static string $resource = RealisasiDanaResource::class;
 
+    public function getTitle(): string
+    {
+        return 'Realisasi Pengajuan';
+    }
+    /*
+    |--------------------------------------------------------------------------
+    | AFTER SAVE
+    |--------------------------------------------------------------------------
+    */
+
     protected function afterSave(): void
     {
         $realisasi = $this->record;
 
-        // kirim email hanya jika status selesai
-        if ($realisasi->alisasi == 'selesai') {
+        /*
+        |--------------------------------------------------------------------------
+        | UPDATE STATUS
+        |--------------------------------------------------------------------------
+        */
 
-            $pegawai = $realisasi
-                ->pengajuan
-                ->pegawai;
+        $realisasi->status = 'TEREALISASI';
+        $realisasi->save();
 
-            if ($pegawai && $pegawai->user) {
+        /*
+        |--------------------------------------------------------------------------
+        | KIRIM EMAIL
+        |--------------------------------------------------------------------------
+        */
 
-                Mail::to($pegawai->user->email)
-                    ->send(new RealisasiDanaMail($realisasi));
-            }
+        $pegawai = $realisasi->pengajuan?->pegawai;
+
+        if ($pegawai?->user?->email) {
+
+             try {
+
+        Mail::to($pegawai->user->email)
+            ->send(new RealisasiDanaMail($realisasi));
+
+    } catch (\Exception $e) {
+
+        dd($e->getMessage());
+    }
         }
+
+        /*
+        |--------------------------------------------------------------------------
+        | NOTIFICATION
+        |--------------------------------------------------------------------------
+        */
+
+        Notification::make()
+        ->title('Pengajuan #' . $realisasi->id_pengajuan . ' direalisasi')
+        ->success()
+        ->sendToDatabase(auth()->user());
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | UBAH TOMBOL SAVE
+    |--------------------------------------------------------------------------
+    */
+
+    protected function getSaveFormAction(): \Filament\Actions\Action
+    {
+        return parent::getSaveFormAction()
+            ->label('Realisasikan');
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | REDIRECT
+    |--------------------------------------------------------------------------
+    */
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
     }
 }

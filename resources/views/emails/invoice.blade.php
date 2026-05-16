@@ -1,4 +1,42 @@
-<h2>Invoice: {{ $data['invoice_number'] }}</h2>
-<p>Halo {{ $data['customer_name'] }},</p>
-<p>Invoice Anda terlampir dalam email ini.</p>
-<p>Terima kasih telah berbelanja di Toko Mukena kami.</p>
+<h2>
+    Invoice Realisasi Dana
+</h2>
+
+<p>
+    Halo,
+</p>
+
+<p>
+    Pengajuan perjalanan dinas Anda telah terealisasi.
+</p>
+
+<p>
+    Detail realisasi:
+</p>
+
+<ul>
+
+    <li>
+        Tujuan:
+        {{ $data['tujuan'] }}
+    </li>
+
+    <li>
+        Jenis Pengajuan:
+        {{ $data['jenis_pengajuan'] }}
+    </li>
+
+    <li>
+        Total Realisasi:
+        Rp {{ number_format($data['total_realisasi'],0,',','.') }}
+    </li>
+
+</ul>
+
+<p>
+    Invoice PDF terlampir pada email ini.
+</p>
+
+<p>
+    Terima kasih.
+</p>

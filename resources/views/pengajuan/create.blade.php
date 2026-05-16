@@ -115,6 +115,7 @@
                     <option value="">Pilih</option>
                     <option value="UANG_MUKA">Uang Muka</option>
                     <option value="REIMBURSEMENT">Reimbursement</option>
+                    <option value="PENGEMBALIAN">Pengembalian</option>
                 </select>
             </div>
 

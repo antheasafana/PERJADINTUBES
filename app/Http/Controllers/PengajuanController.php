@@ -71,6 +71,7 @@ class PengajuanController extends Controller
         | VALIDASI
         |--------------------------------------------------------------------------
         */
+
         $request->validate([
             'jenis_pengajuan' => 'required',
             'tujuan' => 'required',
@@ -85,14 +86,22 @@ class PengajuanController extends Controller
         | UPLOAD FILE
         |--------------------------------------------------------------------------
         */
+
         $fileName = null;
 
         if ($request->hasFile('dokumen')) {
+
             $file = $request->file('dokumen');
 
-            $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $fileName =
+                time() . '_' .
+                uniqid() . '.' .
+                $file->getClientOriginalExtension();
 
-            $file->move(public_path('dokumen'), $fileName);
+            $file->move(
+                public_path('dokumen'),
+                $fileName
+            );
         }
 
         /*
@@ -100,11 +109,16 @@ class PengajuanController extends Controller
         | AMBIL DATA PEGAWAI
         |--------------------------------------------------------------------------
         */
+
         $pegawai = Pegawai::find(1);
 
         if (!$pegawai) {
+
             return redirect()->back()
-                ->with('error', 'Data pegawai tidak ditemukan');
+                ->with(
+                    'error',
+                    'Data pegawai tidak ditemukan'
+                );
         }
 
         /*
@@ -112,30 +126,54 @@ class PengajuanController extends Controller
         | SIMPAN PENGAJUAN
         |--------------------------------------------------------------------------
         */
+
         $pengajuan = Pengajuan::create([
+
             'id_pegawai' => $pegawai->id,
-            'jenis_pengajuan' => $request->jenis_pengajuan,
+
+            'jenis_pengajuan' =>
+                $request->jenis_pengajuan,
+
             'id_pengajuan_parent' => null,
+
             'tujuan' => $request->tujuan,
-            'tgl_berangkat' => $request->tgl_berangkat,
-            'tgl_kembali' => $request->tgl_kembali,
-            'estimasi_biaya' => $request->estimasi_biaya,
+
+            'tgl_berangkat' =>
+                $request->tgl_berangkat,
+
+            'tgl_kembali' =>
+                $request->tgl_kembali,
+
+            'estimasi_biaya' =>
+                $request->estimasi_biaya,
+
             'dokumen' => $fileName,
+
             'status' => 'Diajukan'
         ]);
 
         /*
         |--------------------------------------------------------------------------
-        | KIRIM EMAIL OTOMATIS
+        | KIRIM EMAIL
         |--------------------------------------------------------------------------
         */
+
         try {
+
             if ($pegawai->email) {
+
                 Mail::to($pegawai->email)
-                    ->send(new TesMail($pengajuan));
+                    ->send(
+                        new TesMail($pengajuan)
+                    );
             }
+
         } catch (\Exception $e) {
-            Log::error('Email gagal dikirim: ' . $e->getMessage());
+
+            Log::error(
+                'Email gagal dikirim: ' .
+                $e->getMessage()
+            );
         }
 
         /*
@@ -143,26 +181,59 @@ class PengajuanController extends Controller
         | FLOW PENGAJUAN
         |--------------------------------------------------------------------------
         */
-        if ($request->jenis_pengajuan == 'UANG_MUKA') {
+
+        if (
+            $request->jenis_pengajuan
+            == 'UANG_MUKA'
+        ) {
+
+            /*
+            |--------------------------------------------------------------------------
+            | MASUK KE VERIFIKASI DULU
+            |--------------------------------------------------------------------------
+            */
 
             Verifikasi::create([
-                'id_pengajuan' => $pengajuan->id_pengajuan,
+
+                'id_pengajuan' =>
+                    $pengajuan->id_pengajuan,
+
                 'admin_id' => 1,
+
                 'level' => 1,
+
                 'status' => 'pending',
+
                 'tanggal_verifikasi' => null,
             ]);
 
         } else {
 
+            /*
+            |--------------------------------------------------------------------------
+            | REIMBURSEMENT / PENGEMBALIAN
+            | LANGSUNG MASUK REALISASI
+            |--------------------------------------------------------------------------
+            */
+
             RealisasiDana::create([
-                'id_pengajuan' => $pengajuan->id_pengajuan,
+
+                'id_pengajuan' =>
+                    $pengajuan->id_pengajuan,
+
                 'tgl_realisasi' => now(),
-                'total_realisasi' => $request->estimasi_biaya,
+
+                'total_realisasi' =>
+                    $request->estimasi_biaya,
+
+                'status' => 'PENDING',
             ]);
 
             $pengajuan->update([
-                'status' => 'Direalisasikan'
+
+                'status' =>
+                    'Direalisasikan'
+
             ]);
         }
 
@@ -171,64 +242,161 @@ class PengajuanController extends Controller
         | REDIRECT
         |--------------------------------------------------------------------------
         */
-        return redirect()->route('pengajuan.index')
-            ->with('success', 'Pengajuan berhasil dikirim & email berhasil dikirim!');
+
+        return redirect()
+            ->route('pengajuan.index')
+            ->with(
+                'success',
+                'Pengajuan berhasil dikirim & email berhasil dikirim!'
+            );
     }
 
     public function show($id)
     {
         $pengajuan = Pengajuan::with([
+
                 'realisasiDana',
+
                 'transaksiPengeluaran',
+
                 'verifikasi',
-        
+
             ])
             ->findOrFail($id);
 
-        return view('pengajuan.show', compact('pengajuan'));
+        return view(
+            'pengajuan.show',
+            compact('pengajuan')
+        );
     }
 
     public function edit($id)
     {
-        $pengajuan = Pengajuan::with('realisasiDana')
+        $pengajuan = Pengajuan::with(
+                'realisasiDana'
+            )
             ->findOrFail($id);
 
-        return view('pengajuan.edit', compact('pengajuan'));
+        return view(
+            'pengajuan.edit',
+            compact('pengajuan')
+        );
     }
 
-    public function update(Request $request, $id)
-    {
+    public function update(
+        Request $request,
+        $id
+    ) {
+
         $request->validate([
+
             'tujuan' => 'required',
-            'tgl_berangkat' => 'required|date',
-            'tgl_kembali' => 'required|date|after_or_equal:tgl_berangkat',
-            'estimasi_biaya' => 'nullable|numeric|min:1',
-            'dokumen' => 'nullable|file|mimes:pdf,png,jpg,jpeg,doc,docx|max:2048'
+
+            'tgl_berangkat' =>
+                'required|date',
+
+            'tgl_kembali' =>
+                'required|date|after_or_equal:tgl_berangkat',
+
+            'estimasi_biaya' =>
+                'nullable|numeric|min:1',
+
+            'dokumen' =>
+                'nullable|file|mimes:pdf,png,jpg,jpeg,doc,docx|max:2048'
         ]);
 
-        $pengajuan = Pengajuan::findOrFail($id);
+        $pengajuan =
+            Pengajuan::findOrFail($id);
 
-        $dokumen = $pengajuan->dokumen;
+        $dokumen =
+            $pengajuan->dokumen;
 
         if ($request->hasFile('dokumen')) {
+
             $file = $request->file('dokumen');
 
-            $fileName = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+            $fileName =
+                time() . '_' .
+                uniqid() . '.' .
+                $file->getClientOriginalExtension();
 
-            $file->move(public_path('dokumen'), $fileName);
+            $file->move(
+                public_path('dokumen'),
+                $fileName
+            );
 
             $dokumen = $fileName;
         }
 
         $pengajuan->update([
-            'tujuan' => $request->tujuan,
-            'tgl_berangkat' => $request->tgl_berangkat,
-            'tgl_kembali' => $request->tgl_kembali,
-            'estimasi_biaya' => $request->estimasi_biaya,
+
+            'tujuan' =>
+                $request->tujuan,
+
+            'tgl_berangkat' =>
+                $request->tgl_berangkat,
+
+            'tgl_kembali' =>
+                $request->tgl_kembali,
+
+            'estimasi_biaya' =>
+                $request->estimasi_biaya,
+
             'dokumen' => $dokumen,
         ]);
 
-        return redirect()->route('pengajuan.index')
-            ->with('success', 'Pengajuan berhasil diperbarui!');
+        return redirect()
+            ->route('pengajuan.index')
+            ->with(
+                'success',
+                'Pengajuan berhasil diperbarui!'
+            );
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | DELETE
+    |--------------------------------------------------------------------------
+    */
+
+    public function destroy($id)
+    {
+        $pengajuan = Pengajuan::findOrFail($id);
+
+        /*
+        |--------------------------------------------------------------------------
+        | HAPUS RELASI
+        |--------------------------------------------------------------------------
+        */
+
+        Verifikasi::where(
+            'id_pengajuan',
+            $pengajuan->id_pengajuan
+        )->delete();
+
+        RealisasiDana::where(
+            'id_pengajuan',
+            $pengajuan->id_pengajuan
+        )->delete();
+
+        TransaksiPengeluaran::where(
+            'id_pengajuan',
+            $pengajuan->id_pengajuan
+        )->delete();
+
+        /*
+        |--------------------------------------------------------------------------
+        | HAPUS PENGAJUAN
+        |--------------------------------------------------------------------------
+        */
+
+        $pengajuan->delete();
+
+        return redirect()
+            ->back()
+            ->with(
+                'success',
+                'Data berhasil dihapus'
+            );
     }
 }
