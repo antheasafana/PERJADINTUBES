@@ -204,6 +204,18 @@ class PengajuanController extends Controller
         $pengajuan->load('pegawai');
         PerjadinDocumentService::sendPengajuanBerhasilEmail($pengajuan);
 
+   auth()->user()->notifications()->create([
+
+    'id' => \Str::uuid(),
+
+    'type' => 'pengajuan',
+
+    'data' => [
+        'title' => 'Pengajuan Berhasil',
+        'body'  => 'Pengajuan #' . $pengajuan->id_pengajuan . ' (' . $pengajuan->tujuan . ') berhasil diajukan. Silakan lanjut isi realisasi dana.',
+    ],
+]);
+
         return redirect()
             ->route('pengajuan.index')
             ->with(
@@ -271,6 +283,7 @@ class PengajuanController extends Controller
         $request->validate([
             'total_realisasi' => 'required|numeric|min:1',
             'tgl_realisasi' => 'required|date',
+            'catatan' => 'nullable|string',
         ]);
 
         $realisasi = $pengajuan->realisasiDana;
@@ -284,13 +297,25 @@ class PengajuanController extends Controller
         $realisasi->update([
             'total_realisasi' => $request->total_realisasi,
             'tgl_realisasi' => $request->tgl_realisasi,
+            'catatan' => $request->catatan,
             'status' => 'TEREALISASI',
         ]);
 
         $pengajuan->update([
             'status' => 'Direalisasikan',
         ]);
+    auth()->user()->notifications()->create([
 
+    'id' => \Str::uuid(),
+
+    'type' => 'realisasi',
+
+    'data' => [
+        'title' => 'Realisasi Dana',
+        'body'  => 'Pengajuan #' . $pengajuan->id_pengajuan . ' sudah direalisasikan sebesar Rp ' . number_format($request->total_realisasi, 0, ',', '.'),
+    ],
+
+]);
         return redirect()
             ->route('realisasi.index')
             ->with(
@@ -477,4 +502,23 @@ class PengajuanController extends Controller
                 'Data berhasil dihapus'
             );
     }
+
+   public function batalkan($id)
+{
+    $pengajuan = \App\Models\Pengajuan::with('realisasiDana')
+        ->findOrFail($id);
+
+    if ($pengajuan->realisasiDana) {
+
+        $pengajuan->realisasiDana->update([
+            'status' => 'PENDING'
+        ]);
+    }
+
+    $pengajuan->update([
+        'status' => 'Menunggu Realisasi Dana'
+    ]);
+
+    return back()->with('success', 'Realisasi berhasil dibatalkan.');
+}
 }

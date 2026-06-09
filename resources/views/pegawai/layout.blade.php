@@ -358,6 +358,76 @@
     {{-- CONTENT --}}
     <main class="content">
 
+    <div class="d-flex justify-content-end mb-4">
+
+    <div class="dropdown">
+
+        <button class="btn btn-light rounded-circle shadow-sm d-flex align-items-center justify-content-center position-relative"
+                type="button"
+                data-bs-toggle="dropdown"
+                style="width:60px; height:60px; font-size:28px;">
+
+            🔔
+
+            @if(auth()->check() && auth()->user()->unreadNotifications->count())
+
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+
+                    {{ auth()->user()->unreadNotifications->count() }}
+
+                </span>
+
+            @endif
+
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 p-3"
+    style="width:320px; max-height:400px; overflow:auto;">
+
+    <li class="d-flex justify-content-between align-items-center fw-bold text-success mb-2">
+        <span>Notifikasi</span>
+
+        <form action="{{ route('notifications.readAll') }}" method="POST">
+            @csrf
+            <button type="submit" class="btn btn-sm btn-outline-success">
+                ✔ Baca Semua
+            </button>
+        </form>
+    </li>
+
+    <hr>
+
+            @forelse(auth()->user()->notifications as $notif)
+
+                <li class="mb-2">
+
+                    <div class="border rounded-3 p-2">
+
+                        <div class="fw-semibold">
+                            {{ $notif->data['title'] ?? 'Notifikasi' }}
+                        </div>
+
+                        <small class="text-muted">
+                            {{ $notif->data['body'] ?? '' }}
+                        </small>
+
+                    </div>
+
+                </li>
+
+            @empty
+
+                <li class="text-muted">
+                    Belum ada notifikasi
+                </li>
+
+            @endforelse
+
+        </ul>
+
+    </div>
+
+</div>
         @if(session('success'))
             <div class="alert alert-success">
                 {{ session('success') }}
