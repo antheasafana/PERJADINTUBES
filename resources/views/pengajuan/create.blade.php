@@ -149,7 +149,7 @@
             </div>
 
             <div class="mb-3">
-                <label>Upload Dokumen</label>
+                <label>Upload ST</label>
                 <input type="file" class="form-control" name="dokumen">
             </div>
 

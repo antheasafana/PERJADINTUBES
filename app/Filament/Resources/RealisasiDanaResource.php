@@ -77,7 +77,7 @@ class RealisasiDanaResource extends Resource
                                 )
                                 ->readOnly(),
 
-                            TextInput::make('dokumen_spt')
+                            TextInput::make('dokumen_st')
                                 ->label('Dokumen')
                                 ->formatStateUsing(
                                     fn ($record) => $record?->pengajuan?->dokumen

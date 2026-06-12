@@ -3,21 +3,22 @@
 namespace App\Filament\Resources\RealisasiDanaResource\Pages;
 
 use App\Filament\Resources\RealisasiDanaResource;
-use App\Mail\RealisasiDanaMail;
-
 use Filament\Resources\Pages\EditRecord;
-use Filament\Notifications\Notification;
-
-use Illuminate\Support\Facades\Mail;
 
 class EditRealisasiDana extends EditRecord
 {
     protected static string $resource = RealisasiDanaResource::class;
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $data['status'] = 'TEREALISASI';
 
+        return $data;
+        }
     public function getTitle(): string
     {
         return 'Realisasi Pengajuan';
     }
+    
     /*
     |--------------------------------------------------------------------------
     | AFTER SAVE

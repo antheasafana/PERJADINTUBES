@@ -41,7 +41,7 @@
         {{-- Step 3 Form --}}
         <div class="card">
             <div class="card-body p-4">
-                <h5 class="fw-semibold mb-1">Step 3: Upload Dokumen</h5>
+                <h5 class="fw-semibold mb-1">Step 3: Upload ST</h5>
                 <p class="text-muted mb-4">Upload dokumen pendukung pengajuan Anda. Format: PDF, JPG, PNG (maks. 5MB).</p>
 
                 <form method="POST" action="{{ route('pegawai.pengajuan.step4') }}" enctype="multipart/form-data">

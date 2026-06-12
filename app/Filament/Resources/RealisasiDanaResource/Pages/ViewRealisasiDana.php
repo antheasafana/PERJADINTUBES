@@ -29,7 +29,7 @@ class ViewRealisasiDana extends Page implements Forms\Contracts\HasForms
             'id_pengajuan' => $this->pengajuan->id_pengajuan,
             'jenis_pengajuan' => $this->pengajuan->jenis_pengajuan,
             'tgl_pengajuan' => $this->pengajuan->created_at?->format('Y-m-d'),
-            'dokumen_spt' => $this->pengajuan->dokumen,
+            'dokumen_st' => $this->pengajuan->dokumen,
         ]);
     }
 
@@ -48,7 +48,7 @@ class ViewRealisasiDana extends Page implements Forms\Contracts\HasForms
                 Forms\Components\TextInput::make('tgl_pengajuan')
                     ->readOnly(),
 
-                Forms\Components\TextInput::make('dokumen_spt')
+                Forms\Components\TextInput::make('dokumen_st')
                     ->readOnly(),
 
                 // 🟢 STEP 2 INPUT ADMIN
