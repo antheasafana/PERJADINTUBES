@@ -140,6 +140,91 @@
             background: #f8d7da;
             color: #842029;
         }
+
+        /* Tambahan Style untuk Banner AI */
+        .ai-card {
+            background: linear-gradient(135deg, #ffffff, #f4faf6);
+            border: 1px solid #d0e7da;
+            border-left: 6px solid #2E7D5B;
+            border-radius: 22px;
+            padding: 28px;
+            box-shadow: 0 10px 28px rgba(46, 125, 91, 0.04);
+            margin-bottom: 28px;
+        }
+
+        .ai-badge {
+            background: #e1f0e8;
+            color: #1b5e3c;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 20px;
+            display: inline-block;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .ai-title {
+            color: #155F52;
+            font-weight: 700;
+            font-size: 20px;
+            margin-bottom: 6px;
+        }
+
+        .ai-desc {
+            font-size: 14px;
+            color: #5f6368;
+            margin-bottom: 20px;
+        }
+
+        .ai-pill-info {
+            background: white;
+            border: 1px solid #e2ece6;
+            border-radius: 16px;
+            padding: 16px;
+            height: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .ai-pill-info:hover {
+            border-color: #badcd0;
+            transform: translateY(-2px);
+        }
+
+        .ai-pill-title {
+            font-size: 12px;
+            color: #8c939d;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .ai-pill-value {
+            color: #155F52;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .ai-analysis-box {
+            background: #ffffff;
+            border: 1px solid #e2ece6;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 18px;
+        }
+
+        .ai-analysis-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1b5e3c;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
     </style>
 </head>
 
@@ -157,20 +242,93 @@
 
     <div class="content">
 
+        <!-- NOTIFIKASI HASIL PROSES AI -->
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show rounded-3 px-4 mb-4 border-0 shadow-sm" role="alert">
+                <div class="d-flex align-items-center">
+                    <span class="fs-5 me-2">🎉</span>
+                    <div>{{ session('success') }}</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show rounded-3 px-4 mb-4 border-0 shadow-sm" role="alert">
+                <div class="d-flex align-items-center">
+                    <span class="fs-5 me-2">⚠️</span>
+                    <div>{{ session('error') }}</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
         <div class="hero-card">
-            <h1>Dashboard Pegawai</h1>
-            <p>Selamat datang di sistem perjalanan dinas.</p>
+            <div class="row align-items-center">
+                <div class="col-md-7">
+                    <h1>Dashboard Pegawai</h1>
+                    <p>Selamat datang di sistem perjalanan dinas.</p>
+                </div>
+                <div class="col-md-5 text-md-end text-start mt-3 mt-md-0">
+                    <!-- TOMBOL UNTUK MEMICU REFRESH AI -->
+                    <form action="{{ route('dashboard.refreshRekomendasiAi') }}" method="POST" class="d-inline">
+                        @csrf
+                        <button type="submit" class="btn text-white rounded-pill px-4 py-2 fw-semibold shadow-sm" style="background: #e5a93c; border: none; font-size: 14px;">
+                            ✨ Perbarui Rekomendasi AI
+                        </button>
+                    </form>
+                </div>
+            </div>
 
-            <a href="{{ route('pengajuan.create') }}" class="btn-green">
-                Buat Pengajuan
-            </a>
+            <div class="mt-4">
+                <a href="{{ route('pengajuan.create') }}" class="btn-green">
+                    Buat Pengajuan
+                </a>
 
-            <a href="{{ route('realisasi.index') }}" class="btn-green ms-2">
-                Realisasi Dana
-            </a>
-            <a href="{{ route('pengeluaran.index') }}" class="btn-green ms-2">
-                Transaksi Pengeluaran
-            </a>
+                <a href="{{ route('realisasi.index') }}" class="btn-green ms-2">
+                    Realisasi Dana
+                </a>
+                <a href="{{ route('pengeluaran.index') }}" class="btn-green ms-2">
+                    Transaksi Pengeluaran
+                </a>
+            </div>
+        </div>
+
+        <!-- PANEL INFORMASI REKOMENDASI PERJALANAN AI -->
+        <div class="ai-card">
+            <span class="ai-badge">⚡ Generative AI Module</span>
+            <h3 class="ai-title">Rekomendasi Perjalanan Pintar</h3>
+            <p class="ai-desc">
+                Sistem menganalisis histori perjalanan dinas Anda untuk menemukan pola rute terpopuler serta memberikan saran optimalisasi anggaran dinas yang efisien.
+            </p>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="ai-pill-info">
+                        <span class="ai-pill-title">Tujuan Populer Anda</span>
+                        <div class="ai-pill-value">
+                            {{ $rekomendasiPerjalanan->tujuan_terpopuler ?? 'Belum ada data' }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-8">
+                    <div class="ai-pill-info" style="border-left: 4px solid #e5a93c;">
+                        <span class="ai-pill-title" style="color: #c4821a;">Saran Efisiensi Anggaran</span>
+                        <div class="ai-pill-value text-muted" style="font-size: 14px; font-weight: 500;">
+                            {{ $rekomendasiPerjalanan->saran_efisiensi ?? 'Silakan tekan tombol "Perbarui Rekomendasi AI" untuk menganalisis anggaran Anda.' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ai-analysis-box">
+                <div class="ai-analysis-title">
+                    <span>💡</span> Analisis Rute & Rekomendasi Efisiensi
+                </div>
+                <p class="mb-0 text-secondary" style="font-size: 14px; line-height: 1.6;">
+                    {{ $rekomendasiPerjalanan->analisis_rekomendasi ?? 'Analisis perjalanan dinas Anda belum diproses. Tekan tombol "Perbarui Rekomendasi AI" di kanan atas halaman untuk mulai mendeteksi rute perjalanan dinas paling hemat berdasarkan data transaksi Anda.' }}
+                </p>
+            </div>
         </div>
 
         <div class="row g-4">
@@ -350,5 +508,7 @@
 
     </div>
 
+    <!-- Bootstrap JS untuk dismissible alert -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
