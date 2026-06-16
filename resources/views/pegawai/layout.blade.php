@@ -335,14 +335,19 @@
             </a>
 
             <a href="{{ route('realisasi.index') }}"
-               class="{{ request()->routeIs('realisasi.*') || request()->routeIs('pengajuan.realisasi*') ? 'active' : '' }}">
-                Realisasi Dana
-            </a>
+        class="{{ request()->routeIs('realisasi.*') || request()->routeIs('pengajuan.realisasi*') ? 'active' : '' }}">
+            Realisasi Dana
+        </a>
 
-            <a href="{{ route('pengeluaran.index') }}"
-               class="{{ request()->routeIs('pengeluaran.*') ? 'active' : '' }}">
-                Transaksi Pengeluaran
-            </a>
+        <a href="{{ route('laporan.realisasi') }}"
+        class="{{ request()->routeIs('laporan.realisasi') ? 'active' : '' }}">
+            📊 Laporan Realisasi Dana
+        </a>
+
+        <a href="{{ route('pengeluaran.index') }}"
+        class="{{ request()->routeIs('pengeluaran.*') ? 'active' : '' }}">
+            Transaksi Pengeluaran
+        </a>
         </nav>
 
         <div class="sidebar-footer">

@@ -149,6 +149,11 @@ Route::middleware('pegawai')->group(function () {
         'realisasiIndex',
     ])->name('realisasi.index');
 
+    Route::get(
+    '/laporan-realisasi',
+    [PengajuanController::class, 'laporanRealisasi']
+    )->name('laporan.realisasi');
+
     Route::get('/pengeluaran', [
         TransaksiPengeluaranController::class,
         'index'
@@ -189,4 +194,9 @@ Route::middleware('pegawai')->group(function () {
     // Rute Pembaruan Rekomendasi AI
     Route::match(['get', 'post'], '/dashboard/refresh-rekomendasi-ai', [RekomendasiPerjalananController::class, 'generateRekomendasi'])
     ->name('dashboard.refreshRekomendasiAi');
+
+    Route::post(
+    '/pegawai/perbarui-insight-ai',
+    [PengajuanController::class, 'perbaruiInsightAI']
+    )->name('pegawai.perbaruiInsightAI');
 });
