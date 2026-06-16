@@ -52,12 +52,24 @@ class RekomendasiPerjalananController extends Controller {
             "{\"analisis\": \"teks\", \"terpopuler\": \"nama kota/tujuan\", \"saran_efisiensi\": \"teks\"}";
 
         try {
-            $response = Http::timeout(30)->post("https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={$apiKey}", [
+            $response = Http::timeout(60)->post("https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key={$apiKey}", [
                 'contents' => [['parts' => [['text' => $promptAI]]]]
             ]);
 
+            if ($response->status() == 503) {
+
+    return redirect()->back()->with(
+        'error',
+        'AI sedang sibuk karena trafik tinggi. Silakan coba lagi beberapa menit lagi.'
+    );
+}
+
             if ($response->failed()) {
-                throw new \Exception("API Error: " . $response->body());
+
+                return redirect()->back()->with(
+                    'error',
+                    'Gagal terhubung ke layanan AI.'
+                );
             }
 
             $resultText = $response->json()['candidates'][0]['content']['parts'][0]['text'] ?? '{}';
