@@ -12,7 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('verifikasis', function (Blueprint $table) {
+        Schema::table('verifikasi', function (Blueprint $table) {
 
             /*
             |--------------------------------------------------------------
@@ -20,7 +20,7 @@ return new class extends Migration
             |--------------------------------------------------------------
             */
 
-            if (!Schema::hasColumn('verifikasis', 'id_transaksi_pengeluaran')) {
+            if (!Schema::hasColumn('verifikasi', 'id_transaksi_pengeluaran')) {
 
                 $table->unsignedBigInteger('id_transaksi_pengeluaran')
                     ->nullable()
@@ -40,7 +40,7 @@ return new class extends Migration
         */
 
         DB::statement("
-            ALTER TABLE verifikasis
+            ALTER TABLE verifikasi
             MODIFY COLUMN status
             ENUM('pending','approve','reject')
             NOT NULL
@@ -52,7 +52,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('verifikasis', function (Blueprint $table) {
+        Schema::table('verifikasi', function (Blueprint $table) {
 
             /*
             |--------------------------------------------------------------
@@ -60,7 +60,7 @@ return new class extends Migration
             |--------------------------------------------------------------
             */
 
-            if (Schema::hasColumn('verifikasis', 'id_transaksi_pengeluaran')) {
+            if (Schema::hasColumn('verifikasi', 'id_transaksi_pengeluaran')) {
 
                 $table->dropForeign([
                     'id_transaksi_pengeluaran'
@@ -79,7 +79,7 @@ return new class extends Migration
         */
 
         DB::statement("
-            ALTER TABLE verifikasis
+            ALTER TABLE verifikasi
             MODIFY COLUMN status
             ENUM('approve','reject')
             NOT NULL

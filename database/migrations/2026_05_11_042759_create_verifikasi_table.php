@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('verifikasis', function (Blueprint $table) {
+        Schema::create('verifikasi', function (Blueprint $table) {
 
             $table->id();
 
@@ -77,6 +77,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('verifikasis');
+        Schema::dropIfExists('verifikasi');
     }
 };

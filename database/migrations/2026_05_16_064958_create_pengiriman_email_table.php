@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (! Schema::hasTable('pengiriman_emails')) {
-            Schema::create('pengiriman_emails', function (Blueprint $table) {
+        if (! Schema::hasTable('pengiriman_email')) {
+            Schema::create('pengiriman_email', function (Blueprint $table) {
 
                 $table->id();
 
                 $table->foreignId('id_realisasi')
-                      ->constrained('realisasi_dana');
+                      ->constrained('realisasi_dana', 'id_realisasi');
 
                 $table->string('email');
 
@@ -34,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('pengiriman_emails');
+        Schema::dropIfExists('pengiriman_email');
     }
 };
