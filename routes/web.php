@@ -16,6 +16,7 @@ use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\VerifikasiController;
 use App\Http\Controllers\RealisasiDanaController;
 use App\Http\Controllers\PengirimanEmailController;
+use App\Http\Controllers\RekomendasiPerjalananController; // <-- TAMBAHAN: Impor Controller Rekomendasi Perjalanan AI
 
 /*
 |--------------------------------------------------------------------------
@@ -148,6 +149,11 @@ Route::middleware('pegawai')->group(function () {
         'realisasiIndex',
     ])->name('realisasi.index');
 
+    Route::get(
+    '/laporan-realisasi',
+    [PengajuanController::class, 'laporanRealisasi']
+    )->name('laporan.realisasi');
+
     Route::get('/pengeluaran', [
         TransaksiPengeluaranController::class,
         'index'
@@ -158,7 +164,7 @@ Route::middleware('pegawai')->group(function () {
         'show'
     ])->name('pengeluaran.show');
 
-            Route::get('/pengeluaran/{id_pengajuan}/create', [
+    Route::get('/pengeluaran/{id_pengajuan}/create', [
         TransaksiPengeluaranController::class,
         'create'
     ])->name('pengeluaran.create');
@@ -169,15 +175,28 @@ Route::middleware('pegawai')->group(function () {
     ])->name('pengeluaran.store');
 
     Route::get('/realisasi/{id}/pdf', [
-    RealisasiDanaController::class,
-    'exportPdf'
+        RealisasiDanaController::class,
+        'exportPdf'
     ]);
     
     // Proses pengiriman email (Sintaks dibersihkan)
     Route::get('/kirim_email_realisasi', [PengirimanEmailController::class, 'kirim_email_realisasi'])
     ->name('email.pembayaran');
     
+    Route::post('/notifications/read-all', function () {
+        auth()->user()->unreadNotifications->markAsRead();
+        return back();
+    })->name('notifications.readAll');
 
+    Route::patch('/realisasi/{id}/batalkan', [PengajuanController::class, 'batalkan'])
+    ->name('realisasi.batalkan');
+
+    // Rute Pembaruan Rekomendasi AI
+    Route::match(['get', 'post'], '/dashboard/refresh-rekomendasi-ai', [RekomendasiPerjalananController::class, 'generateRekomendasi'])
+    ->name('dashboard.refreshRekomendasiAi');
+
+    Route::post(
+    '/pegawai/perbarui-insight-ai',
+    [PengajuanController::class, 'perbaruiInsightAI']
+    )->name('pegawai.perbaruiInsightAI');
 });
-
-    

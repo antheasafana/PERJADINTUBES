@@ -2,150 +2,249 @@
 
 @section('title', 'Input Realisasi Dana')
 
-@push('styles')
-<style>
-    .hero-realisasi-form {
-        background: linear-gradient(135deg, #1e4d7b 0%, #3b82c4 100%);
-        border-radius: 26px;
-        padding: 28px 32px;
-        color: #fff;
-        margin-bottom: 24px;
-    }
-
-    .hero-realisasi-form .page-title,
-    .hero-realisasi-form .page-subtitle {
-        color: #fff;
-    }
-
-    .form-realisasi-card {
-        background: #fff;
-        border-radius: 22px;
-        padding: 28px;
-        border-left: 5px solid #3b82c4;
-        box-shadow: 0 10px 30px rgba(30, 77, 123, 0.1);
-    }
-
-    .info-pill {
-        background: #eff6ff;
-        border-radius: 14px;
-        padding: 14px 18px;
-        margin-bottom: 12px;
-    }
-
-    .info-pill .label {
-        font-size: 12px;
-        color: #64748b;
-        margin-bottom: 4px;
-    }
-
-    .info-pill .value {
-        font-weight: 600;
-        color: #1e4d7b;
-    }
-
-    .btn-simpan-realisasi {
-        background: linear-gradient(135deg, #2563eb, #1d4ed8);
-        color: #fff;
-        border: none;
-        border-radius: 999px;
-        padding: 12px 28px;
-        font-weight: 600;
-    }
-
-    .btn-simpan-realisasi:hover {
-        color: #fff;
-        opacity: 0.9;
-    }
-</style>
-@endpush
-
 @section('content')
 
-<div class="hero-realisasi-form">
-    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+<style>
+    .wizard-center-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #efefef;
+    }
+
+    .wizard-custom-container {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .wizard-custom-step {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .wizard-custom-number {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #e2e8f0;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 16px;
+        transition: all 0.3s ease;
+    }
+
+    .wizard-custom-text {
+        font-size: 16px;
+        font-weight: 600;
+        color: #64748b;
+        white-space: nowrap;
+    }
+
+    .wizard-custom-step.active .wizard-custom-number {
+        background: #1a4731;
+        color: #fff;
+    }
+
+    .wizard-custom-step.active .wizard-custom-text {
+        color: #1a4731;
+        font-weight: 700;
+    }
+
+    .wizard-custom-step.done .wizard-custom-number {
+        background: #52b788;
+        color: #fff;
+    }
+
+    .wizard-custom-step.done .wizard-custom-text {
+        color: #2d6a4f;
+    }
+
+    .wizard-custom-line {
+        width: 80px;
+        height: 2px;
+        background: #e2e8f0;
+    }
+
+    .step-panel-custom {
+        display: none;
+    }
+
+    .step-panel-custom.active {
+        display: block;
+    }
+</style>
+
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
         <div>
-            <span class="badge bg-light text-primary mb-2">Form Realisasi Dana</span>
-            <h1 class="page-title mb-2">Input Realisasi Dana</h1>
-            <p class="page-subtitle mb-0 opacity-90">
-                Catat total dana yang benar-benar Anda keluarkan selama perjalanan dinas.
-            </p>
+            <h1 class="h3 fw-bold mb-1" style="color: #1a4731;">💵 Realisasi Dana</h1>
+            <p class="text-muted mb-0 small">Silakan lengkapi tahapan berkas perjalanan dinas Anda.</p>
         </div>
-        <a href="{{ route('realisasi.index') }}" class="btn btn-light btn-sm rounded-pill px-4">
-            ← Kembali
+        <a href="{{ route('realisasi.index') }}" class="btn btn-sm rounded-pill px-4 text-white" style="background-color: #e07b39;">
+            ← Kembali Dashboard
         </a>
     </div>
 </div>
 
-<div class="form-realisasi-card">
-    <h5 class="fw-bold text-primary mb-4">Pengajuan #{{ $pengajuan->id_pengajuan }}</h5>
+<div class="card border-0 shadow-sm p-4" style="border-radius: 22px;">
 
-    <div class="row g-3 mb-4">
-        <div class="col-md-4">
-            <div class="info-pill">
-                <div class="label">Jenis</div>
-                <div class="value">{{ str_replace('_', ' ', $pengajuan->jenis_pengajuan) }}</div>
+    {{-- WIZARD --}}
+    <div class="wizard-center-wrapper">
+        <div class="wizard-custom-container">
+            <div class="wizard-custom-step active" id="w-step-1">
+                <div class="wizard-custom-number">1</div>
+                <div class="wizard-custom-text">Data Pengajuan</div>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="info-pill">
-                <div class="label">Tujuan</div>
-                <div class="value">{{ $pengajuan->tujuan }}</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="info-pill">
-                <div class="label">Estimasi Pengajuan</div>
-                <div class="value">Rp {{ number_format($pengajuan->estimasi_biaya, 0, ',', '.') }}</div>
+            <div class="wizard-custom-line"></div>
+            <div class="wizard-custom-step" id="w-step-2">
+                <div class="wizard-custom-number">2</div>
+                <div class="wizard-custom-text">Realisasi Dana</div>
             </div>
         </div>
     </div>
 
-    @if(session('error'))
-        <div class="alert alert-danger">{{ session('error') }}</div>
-    @endif
+    <h4 class="fw-bold mb-4" style="color: #1a4731;">
+        Pengajuan #{{ $pengajuan->id_pengajuan }}
+    </h4>
 
-    <form action="{{ route('pengajuan.realisasi.store', $pengajuan->id_pengajuan) }}" method="POST">
-        @csrf
+    {{-- STEP 1 --}}
+    <div class="step-panel-custom active" id="p-step-1">
 
         <div class="mb-3">
-            <label class="form-label fw-semibold">Total Realisasi Dana <span class="text-danger">*</span></label>
-            <div class="input-group">
-                <span class="input-group-text bg-primary text-white">Rp</span>
-                <input type="number"
-                       name="total_realisasi"
-                       class="form-control form-control-lg @error('total_realisasi') is-invalid @enderror"
-                       min="1"
-                       step="1"
-                       value="{{ old('total_realisasi') }}"
-                       required>
-            </div>
-            @error('total_realisasi')
-                <div class="invalid-feedback d-block">{{ $message }}</div>
-            @enderror
-            <small class="text-muted">
-                Nominal aktual yang Anda keluarkan selama perjalanan dinas.
-                @if($pengajuan->jenis_pengajuan === 'PENGEMBALIAN')
-                    Sisa dana akan dihitung setelah pengeluaran diinput.
-                @endif
-            </small>
+            <label class="form-label fw-semibold text-secondary">Jenis Pengajuan</label>
+            <input type="text" class="form-control bg-light" value="{{ str_replace('_', ' ', $pengajuan->jenis_pengajuan) }}" disabled>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label fw-semibold text-secondary">Tujuan</label>
+            <input type="text" class="form-control bg-light" value="{{ $pengajuan->tujuan }}" disabled>
         </div>
 
         <div class="mb-4">
-            <label class="form-label fw-semibold">Tanggal Realisasi <span class="text-danger">*</span></label>
-            <input type="date"
-                   name="tgl_realisasi"
-                   class="form-control @error('tgl_realisasi') is-invalid @enderror"
-                   value="{{ old('tgl_realisasi', now()->format('Y-m-d')) }}"
-                   required>
-            @error('tgl_realisasi')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+            <label class="form-label fw-semibold text-secondary">Tanggal Pengajuan</label>
+            <input type="text" class="form-control bg-light"
+                   value="{{ \Carbon\Carbon::parse($pengajuan->tgl_pengajuan ?? $pengajuan->created_at)->format('d/m/Y') }}"
+                   disabled>
         </div>
 
-        <button type="submit" class="btn-simpan-realisasi">
-            Simpan Realisasi Dana
-        </button>
-    </form>
+
+        <div class="mb-4">
+            <label class="form-label fw-semibold text-secondary">Surat Tugas (ST)</label>
+
+            @if(!empty($pengajuan->dokumen))
+                <div class="p-3 border d-flex justify-content-between align-items-center bg-white"
+                     style="border-radius: 12px;">
+
+                    <div class="d-flex align-items-center gap-3">
+                        <span style="font-size: 24px;">📄</span>
+
+                        <div>
+                            <div class="fw-semibold text-dark">
+                                {{ $pengajuan->dokumen }}
+                            </div>
+                            <small class="text-muted">Dokumen Terlampir</small>
+                        </div>
+                    </div>
+
+                    <a href="{{ asset('dokumen/' . $pengajuan->dokumen) }}"
+                       target="_blank"
+                       class="btn btn-sm btn-outline-success rounded-pill px-3">
+                        Lihat
+                    </a>
+                </div>
+            @else
+                <div class="p-3 text-center bg-light text-muted"
+                     style="border-radius: 12px; border: 1px dashed #ccc;">
+                    Tidak ada dokumen Surat Tugas
+                </div>
+            @endif
+        </div>
+
+        <div class="d-flex justify-content-end">
+            <button type="button"
+                    class="btn text-white px-5"
+                    style="background:#1a4731"
+                    onclick="pindahStep(2)">
+                Selanjutnya →
+            </button>
+        </div>
+
+    </div>
+
+    {{-- STEP 2 --}}
+    <div class="step-panel-custom" id="p-step-2">
+
+        @if(session('error'))
+            <div class="alert alert-danger mb-3">{{ session('error') }}</div>
+        @endif
+
+        <form action="{{ route('pengajuan.realisasi.store', $pengajuan->id_pengajuan) }}" method="POST">
+            @csrf
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Total Realisasi Dana *</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light fw-semibold">Rp</span>
+                    <input type="number" name="total_realisasi" class="form-control" min="1" required value="{{ old('total_realisasi') }}">
+                </div>
+                @error('total_realisasi')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Tanggal Realisasi *</label>
+                <input type="date" name="tgl_realisasi" class="form-control" required value="{{ old('tgl_realisasi') }}">
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Catatan</label>
+                <textarea name="catatan" class="form-control" rows="4" placeholder="Contoh: biaya transport naik karena perubahan jadwal perjalanan" style="border-radius: 12px; resize: none;">{{ old('catatan') }}</textarea>
+                @error('catatan')
+                    <small class="text-danger">{{ $message }}</small>
+                @enderror
+                <small class="text-muted d-block mt-1">Diisi optional. kasih tanda "-" jika tidak perlu</small>
+            </div>
+
+            <div class="d-flex justify-content-between">
+                <button type="button" class="btn btn-outline-secondary" onclick="pindahStep(1)">
+                    ← Kembali
+                </button>
+
+                <button type="submit" class="btn text-white px-4"
+                        style="background: linear-gradient(135deg,#1a4731,#2d6a4f);">
+                    Realisasikan
+                </button>
+            </div>
+
+        </form>
+    </div>
+
 </div>
+
+<script>
+function pindahStep(step) {
+    document.getElementById('p-step-1').classList.remove('active');
+    document.getElementById('p-step-2').classList.remove('active');
+
+    document.getElementById('p-step-' + step).classList.add('active');
+
+    if(step === 1) {
+        document.getElementById('w-step-1').className = 'wizard-custom-step active';
+        document.getElementById('w-step-2').className = 'wizard-custom-step';
+    } else {
+        document.getElementById('w-step-1').className = 'wizard-custom-step done';
+        document.getElementById('w-step-2').className = 'wizard-custom-step active';
+    }
+}
+</script>
 
 @endsection

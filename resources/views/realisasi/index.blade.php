@@ -5,17 +5,17 @@
 @push('styles')
 <style>
     .hero-realisasi {
-        background: linear-gradient(135deg, #1e4d7b 0%, #3b82c4 55%, #60a5fa 100%);
+    background: linear-gradient(135deg, #1b4332 0%, #2d6a4f 55%, #52b788 100%);
         border-radius: 26px;
-        padding: 32px 36px;
-        color: #fff;
+        padding-bottom: 60px;
+        color: #0bdf40;
         margin-bottom: 28px;
         box-shadow: 0 14px 40px rgba(30, 77, 123, 0.25);
     }
 
     .hero-realisasi .page-title,
     .hero-realisasi .page-subtitle {
-        color: #fff;
+           color: #084b12;
     }
 
     .hero-realisasi .step-badge {
@@ -141,8 +141,12 @@
 
 @section('content')
 
+<a href="{{ route('dashboard') }}"
+   class="btn btn-sm rounded-pill px-4 mb-4"
+   style="background:#2d6a4f; color:white; border:none;">
+            ← Dashboard
+        </a>
 <div class="hero-realisasi">
-    <span class="step-badge">Langkah 1 · Realisasi Dana</span>
     <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
         <div>
             <h1 class="page-title mb-2">Realisasi Dana</h1>
@@ -150,12 +154,8 @@
                 Catat total dana aktual yang Anda keluarkan saat perjalanan dinas (reimbursement & pengembalian).
             </p>
         </div>
-        <a href="{{ route('dashboard') }}" class="btn btn-light btn-sm rounded-pill px-4">
-            ← Dashboard
-        </a>
-    </div>
 </div>
-
+<div style="margin-bottom: 40px;"></div>
 @if(session('info'))
     <div class="alert alert-info">{{ session('info') }}</div>
 @endif
@@ -229,6 +229,20 @@
                            target="_blank">
                             📄 Unduh PDF Realisasi
                         </a>
+
+                    <form action="{{ route('realisasi.batalkan', $item->id_pengajuan) }}" method="POST">
+                            @csrf
+                            @method('PATCH')
+
+                            <button
+                                type="submit"
+                                onclick="return confirm('Batalkan realisasi dana ini?')"
+                                class="btn-realisasi-outline w-100 text-center"
+                            >
+                                Batalkan Realisasi
+                            </button>
+                        </form>
+                                                
                         <a href="{{ route('pengeluaran.index') }}" class="btn-realisasi-outline w-100 text-center">
                             Ke Transaksi Pengeluaran →
                         </a>
