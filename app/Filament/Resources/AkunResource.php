@@ -55,6 +55,7 @@ class AkunResource extends Resource
                     'Aset' => 'Aset',
                     'Kewajiban' => 'Kewajiban',
                     'Modal' => 'Modal',
+                    'Beban' => 'Beban',
                 ])
                 ->required(),
 

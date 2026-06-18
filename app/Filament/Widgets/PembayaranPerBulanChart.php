@@ -13,12 +13,12 @@ class PembayaranPerBulanChart extends ChartWidget
     protected function getData(): array
     {
         $data = Pembayaran::query()
-        ->where('status', 'dibayar')
-        ->whereNotNull('tanggal_pembayaran')
-        ->selectRaw('MONTH(tanggal_pembayaran) as bulan, SUM(nominal) as total')
-        ->groupBy('bulan')
-        ->orderBy('bulan')
-        ->get();
+    ->join('pengajuan', 'pembayaran.id_pengajuan', '=', 'pengajuan.id_pengajuan')
+    ->where('pembayaran.status', 'dibayar')
+    ->selectRaw('MONTH(pengajuan.tgl_berangkat) as bulan, SUM(pembayaran.nominal) as total')
+    ->groupBy('bulan')
+    ->orderBy('bulan')
+    ->get();
 
         $namaBulan = [
             1=>'Jan',2=>'Feb',3=>'Mar',4=>'Apr',

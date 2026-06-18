@@ -12,4 +12,8 @@ class akun extends Model
     protected $table = 'akuns'; // Nama tabel eksplisit
 
     protected $guarded = [];
+    public function jurnalDetails()
+{
+    return $this->hasMany(JurnalDetail::class);
+}
 }

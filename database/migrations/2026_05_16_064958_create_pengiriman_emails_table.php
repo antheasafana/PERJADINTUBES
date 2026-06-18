@@ -6,18 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        if (! Schema::hasTable('pengiriman_emails')) {
+        if (!Schema::hasTable('pengiriman_emails')) {
+
             Schema::create('pengiriman_emails', function (Blueprint $table) {
 
                 $table->id();
 
-                $table->foreignId('id_realisasi')
-                      ->constrained('realisasi_dana');
+                $table->unsignedBigInteger('id_realisasi');
+
+                $table->foreign('id_realisasi')
+                      ->references('id_realisasi')
+                      ->on('realisasi_dana')
+                      ->onDelete('cascade');
 
                 $table->string('email');
 
@@ -29,9 +31,6 @@ return new class extends Migration
         }
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('pengiriman_emails');

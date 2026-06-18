@@ -7,11 +7,20 @@ return new class extends Migration
 {
     public function up(): void
     {
-        DB::statement("ALTER TABLE verifikasi MODIFY COLUMN status ENUM('pending','approve','reject') DEFAULT 'pending'");
+        DB::statement("
+            ALTER TABLE verifikasis
+            MODIFY COLUMN status
+            ENUM('pending','approve','reject')
+            DEFAULT 'pending'
+        ");
     }
 
     public function down(): void
     {
-        DB::statement("ALTER TABLE verifikasi MODIFY COLUMN status ENUM('approve','reject')");
+        DB::statement("
+            ALTER TABLE verifikasis
+            MODIFY COLUMN status
+            ENUM('approve','reject')
+        ");
     }
 };
