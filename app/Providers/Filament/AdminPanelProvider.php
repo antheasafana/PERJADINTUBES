@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Widgets\BiayaPerKategoriChart;
+use App\Filament\Widgets\TotalPengeluaranChart;
 use App\Filament\Widgets\VerifikasiPerBulanChart;
 use App\Filament\Widgets\VerifikasiStatCards;
 use Filament\Http\Middleware\Authenticate;
@@ -49,6 +51,8 @@ class AdminPanelProvider extends PanelProvider
                 for: 'App\\Filament\\Widgets'
             )
             ->widgets([
+                BiayaPerKategoriChart::class,
+                TotalPengeluaranChart::class,
                 VerifikasiStatCards::class,
                 VerifikasiPerBulanChart::class,
 
